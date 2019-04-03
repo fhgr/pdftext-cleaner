@@ -27,3 +27,8 @@ target/
 
 # log files
 *.log
+
+# project files
+.classpath
+.project
+.settings
