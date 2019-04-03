@@ -62,7 +62,6 @@ public class PdfPostProcessingTest {
         String result = PdfPostProcessing.mergeNewlinesIfNoPunctationOccurs(
                         "Ich bin peter. Ich habe eine linie. ich\n" + "die ich. nicht machen will\n"
                                         + "daher bin ich so.\n" + "Nanana do.");
-        log.info(result);
         assertEquals("Ich bin peter. Ich habe eine linie. ich die ich. nicht machen will daher bin ich so.\n"
                         + "Nanana do.", result);
     }

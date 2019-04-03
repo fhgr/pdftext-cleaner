@@ -39,7 +39,7 @@
 					<!-- MainClass in mainfest make a executable jar -->
 					<archive>
 						<manifest>
-							<mainClass>ch.htwchur.integrity.extraction.PdfHealer</mainClass>
+							<mainClass>ch.htwchur.pdf.healer.PdfHealer</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

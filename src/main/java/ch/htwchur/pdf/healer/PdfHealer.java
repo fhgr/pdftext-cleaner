@@ -2,7 +2,6 @@ package ch.htwchur.pdf.healer;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.List;
 import org.apache.commons.cli.CommandLine;
@@ -47,7 +46,7 @@ public class PdfHealer {
         Options options = generateOptions();
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = parser.parse(options, args);
-        startProcessingOfWholeFolder(cmd.getOptionValue("i"), cmd.getOptionValue("o"));
+        startProcessingOfWholeFolder(cmd.getOptionValue("inputDir"), cmd.getOptionValue("outputDir"));
     }
 
     /**
@@ -66,7 +65,7 @@ public class PdfHealer {
                 String cleanedText =
                                 pdfHealProcessing(new String(Files.readAllBytes(file.toPath())));
                 FileUtils.writeStringToFile(new File(outputDir + "/" + file.getName()), cleanedText,
-                                Charset.forName("UTF-8"));
+                                "UTF-8");
                 log.info("Writing healed file: {}", file.getName());
             }
         }
