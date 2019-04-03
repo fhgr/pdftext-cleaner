@@ -10,6 +10,6 @@ Pdf to text cleaner addresses common problems after a pdf is extracted to text
 
 ## Build and start cleaning process
 Build jar by `mvn clean package`
-Run processing by `java -jar ./target/pdfhealer-0.0.1-SNAPSHOT-jar-with-dependencies.jar` -i {input directory with .txt files} -o {output diretory}
+Run processing by `java -jar ./target/pdfhealer-0.0.1-SNAPSHOT-jar-with-dependencies.jar -i {input directory with .txt files} -o {output diretory}`
 
 Note: options -i and -o are mandatory
