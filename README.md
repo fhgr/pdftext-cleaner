@@ -13,3 +13,10 @@ Build jar by `mvn clean package`
 Run processing by `java -jar ./target/pdfhealer-0.0.1-SNAPSHOT-jar-with-dependencies.jar -inputDir {input directory with .txt files} -outputDir {output diretory}`
 
 Note: options -inputDir and -outputDir are mandatory
+
+## Start extraction process
+java -jar ./target/pdfhealer-0.0.1-SNAPSHOT-jar-with-dependencies.jar -e -start 3 -inputDir {input directory with .txt files} -outputDir {output diretory}`
+
+Note:   options -inputDir and -outputDir are mandatory
+        option -e -> extraction from pdf to text
+        with option -e you can set -start which describes the pdf page to start extraction at

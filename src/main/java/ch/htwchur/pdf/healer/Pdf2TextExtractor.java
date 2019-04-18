@@ -44,10 +44,11 @@ public class Pdf2TextExtractor {
      * @throws InvalidPasswordException
      * @throws IOException
      */
-    public static Pair<String, String> extractPdfToText(File file)
+    public static Pair<String, String> extractPdfToText(File file, int startPage)
                     throws InvalidPasswordException, IOException {
         try (PDDocument doc = PDDocument.load(file)) {
             log.info("Loaded file: {}", file.getName());
+            stripper.setStartPage(startPage);
             Pair<String, String> pdfFilePair = Pair.of(file.getName(), stripper.getText(doc));
             return pdfFilePair;
         }
@@ -66,7 +67,7 @@ public class Pdf2TextExtractor {
         try (Stream<Path> paths = Files.walk(Paths.get(pathString))) {
             paths.filter(Files::isRegularFile)
                             .filter(file -> FilenameUtils.getExtension(file.toString())
-                                            .toLowerCase().contains(".pdf"))
+                                            .toLowerCase().contains("pdf"))
                             .forEach(path -> filesInDirectory.add(path.toFile()));
         }
         if (limit > 0) {

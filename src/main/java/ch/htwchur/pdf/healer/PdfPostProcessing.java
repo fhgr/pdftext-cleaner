@@ -8,8 +8,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.tuple.Pair;
 import lombok.extern.slf4j.Slf4j;
+
 /**
- * Post processes a extracted PDF 
+ * Post processes a extracted PDF
  * <ul>
  * <li>Merges splitted words due to newlines. like Handels-\nabkommen'</li>
  * <li>Merges newlines if no puncation at the end of the line</li>
@@ -19,15 +20,18 @@ import lombok.extern.slf4j.Slf4j;
  * <li>Reduces reoccuring newlines to a maxiumum of 2</li>
  * <li>Merges white-spaces words like 'W e d n e s d a y' to 'Wednesday'</li>
  * </ul>
+ * 
  * @author sandro.hoerler@htwchur.ch
  *
  */
 @Slf4j
 public class PdfPostProcessing {
-
-    private static final String RGX_MERGE_WHITESPACE = "(\\S\\s){2,}\\w";
+    // ([A-Za-zäöü-](\s|[[:punct:]]|$)){2,}
+    // private static final String RGX_MERGE_WHITESPACE = "(\\S\\s){2,}(([^0-9])\\W\\S\\s)";
+    private static final String RGX_MERGE_WHITESPACE = "([A-Za-zäöü-](\\s|\\p{Punct}|$)){2,}";
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile(RGX_MERGE_WHITESPACE);
     private static final String RGX_FIND_PUNCTATIONS = "\\p{Punct}";
+    private static final String RGX_FIND_STRANGE_END_DIGIT = "([�]{2,}+\\W+[0-9]*)";
 
     /**
      * Merges splitted words in case of
@@ -107,6 +111,7 @@ public class PdfPostProcessing {
      * <li>&amp; to &</li>
      * <li>\\ to " "</li>
      * <li>■, ,, to -</li>
+     * <li>� to .</li>
      * </ul>
      * 
      * @param text
@@ -115,7 +120,7 @@ public class PdfPostProcessing {
     protected static String removeUnreconziedSignsAndUnnecessaryCharacters(String text) {
         return text.replace("\",\"", " ").replace("\"", "").replace("{", "").replace("}", "")
                         .replace("&amp;", "&").replace("^", "").replace("\\", " ").replace("■", "-")
-                        .replace("", "-").replace("", "-").replace("", "-");
+                        .replace("", "-").replace("", "-").replace("", "-").replace("�", ".");
     }
 
     /**
@@ -202,11 +207,14 @@ public class PdfPostProcessing {
      */
     protected static String[] processLines(String[] lines) {
         for (int i = 0; i < lines.length; i++) {
-            lines[i] = splitAccitentiallyMergedWordsWhenInwordUppercase(
-                            removeUnreconziedSignsAndUnnecessaryCharacters(lines[i]));
+            lines[i] = cleanUnmappableSignsIfOccuringWithNumberAtEndOfLine(lines[i]);
+            // lines[i] = splitAccitentiallyMergedWordsWhenInwordUppercase(
+            // removeUnreconziedSignsAndUnnecessaryCharacters(lines[i]));
+            lines[i] = removeUnreconziedSignsAndUnnecessaryCharacters(lines[i]);
             lines[i] = removePageKeywords(lines[i]);
             lines[i] = mergeWhitespacesLettersOfAWord(lines[i]);
             lines[i] = lines[i].replaceAll("\\s{2,}", " ");
+            lines[i] = lines[i].replaceAll("\\((?=\\s{1,}).", "(");
         }
         return lines;
     }
@@ -221,15 +229,14 @@ public class PdfPostProcessing {
         Matcher matcher = WHITESPACE_PATTERN.matcher(line);
         StringBuilder sb = new StringBuilder();
         while (matcher.find()) {
-            line = line.replace(matcher.group(), mergeAndCleanWhitespacedString(matcher.group()));
-            line = line.replaceAll(" +", " ");
+            line = line.replace(matcher.group(), mergeAndCleanWhitespacedString(matcher.group()) + " ");
         }
-        String[] processedLines = line.split("(?<=\\s|\\p{Punct})");
+        String[] processedLines = line.split("(?<=\\s)|((?<=\\p{Punct})(?!\\p{Digit}))");
         for (int i = 0; i < processedLines.length; i++) {
             sb.append(mergeAndCleanWhitespacedString(processedLines[i]));
             sb.append(" ");
         }
-        return sb.toString().trim();
+        return sb.toString().replaceAll("\\s{2,}"," ").trim();
     }
 
     /**
@@ -261,5 +268,15 @@ public class PdfPostProcessing {
             }
         }
         return dirty;
+    }
+
+    /**
+     * Cleans string by {@linkplain PdfPostProcessing#RGX_FIND_STRANGE_END_DIGIT} regex
+     * 
+     * @param dirty
+     * @return cleaned String
+     */
+    private static String cleanUnmappableSignsIfOccuringWithNumberAtEndOfLine(String dirty) {
+        return dirty.replaceAll(RGX_FIND_STRANGE_END_DIGIT, "");
     }
 }
