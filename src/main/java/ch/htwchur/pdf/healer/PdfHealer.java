@@ -31,7 +31,7 @@ public class PdfHealer {
      */
     private static Options generateOptions() {
         final Option inputFile = Option.builder("inputDir").required(true).hasArg(true)
-                        .longOpt("Input directory with text files").build();
+                        .longOpt("Input directory with text files or if csv input csv file").build();
         final Option outputFile = Option.builder("outputDir").required(true).hasArg(true)
                         .longOpt("Output directory").build();
         final Option extraction = Option.builder("e").required(false).hasArg(false)
@@ -40,7 +40,8 @@ public class PdfHealer {
                         .longOpt("Limit of pdf files to extract").build();
         final Option start = Option.builder("start").required(false).hasArg(true)
                         .longOpt("Start extraction at page number").build();
-        
+        final Option csv = Option.builder("csv").required(false).hasArg(false)
+                        .longOpt("Extracts csv file to text files").build();
         final Options options = new Options();
 
         options.addOption(inputFile);
@@ -48,6 +49,7 @@ public class PdfHealer {
         options.addOption(extraction);
         options.addOption(limit);
         options.addOption(start);
+        options.addOption(csv);
         return options;
     }
 
@@ -63,6 +65,10 @@ public class PdfHealer {
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = parser.parse(options, args);
         int startPage = 0;
+        if(cmd.hasOption("csv")) {
+            extractCSVtoTextFiles(cmd.getOptionValue("inputDir"), cmd.getOptionValue("outputDir"));
+            return;
+        }
         if (cmd.hasOption("e")) {
             if (cmd.hasOption("start")) {
                 startPage = Integer.parseInt(cmd.getOptionValue("start"));
@@ -97,7 +103,7 @@ public class PdfHealer {
     /**
      * Processes whole folder
      * 
-     * @param inputDir reading directory
+     * @param inputDir  reading directory
      * @param outputDir writing directory
      * @throws IOException
      */
@@ -141,6 +147,15 @@ public class PdfHealer {
             sb.append("\n");
         });
         return sb.toString();
+    }
+
+    public static void extractCSVtoTextFiles(String inputPath, String outputPath) {
+        try {
+            CSVtoTextExtractor.extractWeblyzardExportFileToTextFiles(inputPath, outputPath);
+        } catch (IOException e) {
+            log.error("Could not process {} to {} due to {}", inputPath, outputPath,
+                            e.getMessage());
+        }
     }
 
 }
