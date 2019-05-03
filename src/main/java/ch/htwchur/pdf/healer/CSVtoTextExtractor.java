@@ -15,7 +15,11 @@ import com.google.common.collect.Maps;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import lombok.extern.slf4j.Slf4j;
-
+/**
+ * Exports Weblyzard Export CSV to text files per row
+ * @author sandro.hoerler@htwchur.ch
+ *
+ */
 @Slf4j
 public class CSVtoTextExtractor {
 

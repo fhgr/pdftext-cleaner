@@ -17,7 +17,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Main class to start PdfHealer
+ * Pdf Healer, PDF to text extractor, Weblyzard PDF extractor
  * 
  * @author sandro.hoerler@htwchur.ch
  *
@@ -43,7 +43,6 @@ public class PdfHealer {
         final Option csv = Option.builder("csv").required(false).hasArg(false)
                         .longOpt("Extracts csv file to text files").build();
         final Options options = new Options();
-
         options.addOption(inputFile);
         options.addOption(outputFile);
         options.addOption(extraction);
@@ -149,6 +148,11 @@ public class PdfHealer {
         return sb.toString();
     }
 
+    /**
+     * Extracts CSV to text file 
+     * @param inputPath
+     * @param outputPath
+     */
     public static void extractCSVtoTextFiles(String inputPath, String outputPath) {
         try {
             CSVtoTextExtractor.extractWeblyzardExportFileToTextFiles(inputPath, outputPath);

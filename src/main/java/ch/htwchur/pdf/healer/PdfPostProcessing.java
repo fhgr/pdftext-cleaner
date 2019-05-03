@@ -26,8 +26,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class PdfPostProcessing {
-    // ([A-Za-zäöü-](\s|[[:punct:]]|$)){2,}
-    // private static final String RGX_MERGE_WHITESPACE = "(\\S\\s){2,}(([^0-9])\\W\\S\\s)";
     private static final String RGX_MERGE_WHITESPACE = "([A-Za-zäöü-](\\s|\\p{Punct}|$)){2,}";
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile(RGX_MERGE_WHITESPACE);
     private static final String RGX_FIND_PUNCTATIONS = "\\p{Punct}";
@@ -208,8 +206,6 @@ public class PdfPostProcessing {
     protected static String[] processLines(String[] lines) {
         for (int i = 0; i < lines.length; i++) {
             lines[i] = cleanUnmappableSignsIfOccuringWithNumberAtEndOfLine(lines[i]);
-            // lines[i] = splitAccitentiallyMergedWordsWhenInwordUppercase(
-            // removeUnreconziedSignsAndUnnecessaryCharacters(lines[i]));
             lines[i] = removeUnreconziedSignsAndUnnecessaryCharacters(lines[i]);
             lines[i] = removePageKeywords(lines[i]);
             lines[i] = mergeWhitespacesLettersOfAWord(lines[i]);
@@ -255,7 +251,7 @@ public class PdfPostProcessing {
         dirty = cleanUpperCaseInWordofLineToStartWithUpperCase(dirty);
         return punctation + dirty;
     }
-
+    
     private static String cleanUpperCaseInWordofLineToStartWithUpperCase(String dirty) {
         if (dirty.length() > 0) {
             if (Character.isUpperCase(dirty.charAt(0))) {
