@@ -15,8 +15,8 @@ Run processing by `java -jar ./target/pdfhealer-0.0.1-SNAPSHOT-jar-with-dependen
 Note: options -inputDir and -outputDir are mandatory
 
 ## Start extraction process
-java -jar ./target/pdfhealer-0.0.1-SNAPSHOT-jar-with-dependencies.jar -e -start 3 -inputDir {input directory with .txt files} -outputDir {output diretory}`
+`java -jar ./target/pdfhealer-0.0.1-SNAPSHOT-jar-with-dependencies.jar -e -start 3 -inputDir {input directory with .pdf files} -outputDir {output directory}`
 
-Note:   options -inputDir and -outputDir are mandatory
-        option -e -> extraction from pdf to text
-        with option -e you can set -start which describes the pdf page to start extraction at
+Note:   options `-inputDir` and `-outputDir` are mandatory
+        option `-e` -> extraction from pdf to text
+        with option `-e` set you can also define `-start {int}` which describes the pdf page to start extraction at
