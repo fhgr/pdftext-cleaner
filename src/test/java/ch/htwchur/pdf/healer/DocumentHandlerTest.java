@@ -31,7 +31,16 @@ public class DocumentHandlerTest {
                         + EXP_HEADER_REMOVAL);
         System.out.println(cleanedDoc);
         assertEquals(EXP_HEADER_REMOVAL, cleanedDoc);
-
-
+    }
+    
+    @Test
+    public void testCopyrightSignHeaderRemoval() {
+        String cleanedDoc = DocumentHandler.removeDocumentHeader("89 Wörter\n"
+                        + "3 September 2014\n" + "Tages Anzeiger\n" + "TANZ\n" + "Deutsch\n"
+                        + "© 2014 Tages Anzeiger Homepage Address:   http://www.tages-anzeiger.ch\n"
+                        + "\n"
+                        + EXP_HEADER_REMOVAL);
+        System.out.println(cleanedDoc);
+        assertEquals(EXP_HEADER_REMOVAL, cleanedDoc);
     }
 }
