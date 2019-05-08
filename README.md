@@ -32,3 +32,8 @@ Note:
 Exports Weblyzard Portal CSV format to textfile per row
 use `-csv` in combination with `-inputDir` and `-outputDir.`
 `java -jar ./target/pdfhealer-0.0.1-SNAPSHOT-jar-with-dependencies.jar -csv -inputDir {input path to csv file} -outputDir {output directory}`
+
+### Start document preparation (spliting and header removal)
+Splits documents according to `(?m)^Dokument \\w+$";` and removes header with `(?m)^.*?\\b(copyright|Copyright|(c))\\b.*$`.
+use `-prepare` in combination with `-inputDir` and `-outputDir.`
+`java -jar ./target/pdfhealer-0.0.1-SNAPSHOT-jar-with-dependencies.jar -prepare -inputDir {input path to folder containing txt files} -outputDir {output directory}`
