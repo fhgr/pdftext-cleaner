@@ -31,7 +31,8 @@ public class PdfHealer {
      */
     private static Options generateOptions() {
         final Option inputFile = Option.builder("inputDir").required(true).hasArg(true)
-                        .longOpt("Input directory with text files or if csv input csv file").build();
+                        .longOpt("Input directory with text files or if csv input csv file")
+                        .build();
         final Option outputFile = Option.builder("outputDir").required(true).hasArg(true)
                         .longOpt("Output directory").build();
         final Option extraction = Option.builder("e").required(false).hasArg(false)
@@ -42,6 +43,8 @@ public class PdfHealer {
                         .longOpt("Start extraction at page number").build();
         final Option csv = Option.builder("csv").required(false).hasArg(false)
                         .longOpt("Extracts csv file to text files").build();
+        final Option prepareDocs = Option.builder("prepare").required(false).hasArg(false)
+                        .longOpt("prepares faktiva documents").build();
         final Options options = new Options();
         options.addOption(inputFile);
         options.addOption(outputFile);
@@ -49,6 +52,7 @@ public class PdfHealer {
         options.addOption(limit);
         options.addOption(start);
         options.addOption(csv);
+        options.addOption(prepareDocs);
         return options;
     }
 
@@ -64,8 +68,12 @@ public class PdfHealer {
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = parser.parse(options, args);
         int startPage = 0;
-        if(cmd.hasOption("csv")) {
+        if (cmd.hasOption("csv")) {
             extractCSVtoTextFiles(cmd.getOptionValue("inputDir"), cmd.getOptionValue("outputDir"));
+            return;
+        }
+        if (cmd.hasOption("prepare")) {
+            DocumentHandler.processDocuments(cmd.getOptionValue("inputDir"), cmd.getOptionValue("outputDir"));
             return;
         }
         if (cmd.hasOption("e")) {
@@ -149,7 +157,8 @@ public class PdfHealer {
     }
 
     /**
-     * Extracts CSV to text file 
+     * Extracts CSV to text file
+     * 
      * @param inputPath
      * @param outputPath
      */
