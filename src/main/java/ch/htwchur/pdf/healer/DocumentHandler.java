@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DocumentHandler {
     private static final HashFunction hash = Hashing.murmur3_128();
     private static final String RGX_REMOVE_DOC_HEADER =
-                    "(?m)^.*?\\b(copyright|Copyright|(c))\\b.*$";
+                    "(?m)^.*?\\b(copyright|Copyright|(c)|©)\\b.*$";
     private static final String RGX_SPLIT_DOC = "(?m)^Dokument \\w+$";
 
     public static Pattern documentSplitPattern;
