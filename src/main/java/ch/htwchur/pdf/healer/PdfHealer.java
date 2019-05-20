@@ -14,6 +14,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import ch.htwchur.pdf.healer.validation.RandomFilePicker;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -45,6 +46,13 @@ public class PdfHealer {
                         .longOpt("Extracts csv file to text files").build();
         final Option prepareDocs = Option.builder("prepare").required(false).hasArg(false)
                         .longOpt("prepares faktiva documents").build();
+        final Option removeHeader = Option.builder("header").required(false).hasArg(false)
+                        .longOpt("Removes header of a splitted document").build();
+        final Option pickAmount = Option.builder("pick").required(false).hasArg(true).longOpt(
+                        "Picks documents from directory with specified amount. A csv with all picked filenames is created")
+                        .build();
+        final Option csvFileName = Option.builder("csvfile").required(false).hasArg(true)
+                        .longOpt("defines csv filename in combination with pick argument").build();
         final Options options = new Options();
         options.addOption(inputFile);
         options.addOption(outputFile);
@@ -53,6 +61,9 @@ public class PdfHealer {
         options.addOption(start);
         options.addOption(csv);
         options.addOption(prepareDocs);
+        options.addOption(removeHeader);
+        options.addOption(csvFileName);
+        options.addOption(pickAmount);
         return options;
     }
 
@@ -73,9 +84,19 @@ public class PdfHealer {
             return;
         }
         if (cmd.hasOption("prepare")) {
-            DocumentHandler.processDocuments(cmd.getOptionValue("inputDir"), cmd.getOptionValue("outputDir"));
+            DocumentHandler.processDocuments(cmd.getOptionValue("inputDir"),
+                            cmd.getOptionValue("outputDir"), cmd.hasOption("header"));
             return;
         }
+        if (cmd.hasOption("pick")) {
+            int amountToPick = Integer.parseInt(cmd.getOptionValue("pick"));
+            String csvFilename = cmd.hasOption("csvfile") ? cmd.getOptionValue("csvfile")
+                            : "picker_file.csv";
+            RandomFilePicker.pickAmountOfFiles(amountToPick, cmd.getOptionValue("inputDir"),
+                            cmd.getOptionValue("outputDir"), csvFilename);
+            return;
+        }
+
         if (cmd.hasOption("e")) {
             if (cmd.hasOption("start")) {
                 startPage = Integer.parseInt(cmd.getOptionValue("start"));

@@ -7,13 +7,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import com.google.common.base.Charsets;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -24,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class DocumentHandler {
-    private static final HashFunction hash = Hashing.murmur3_128();
     private static final String RGX_REMOVE_DOC_HEADER =
                     "(?m)^.*?\\b(copyright|Copyright|(c))\\b.*$";
     private static final String RGX_REMOVE_SIGN_DOC_HEADER = "(?m)^©.*$";
@@ -39,18 +38,22 @@ public class DocumentHandler {
      * @param outputFolder outputfolder
      * @throws IOException
      */
-    public static void processDocuments(String inputFolder, String outputFolder)
-                    throws IOException {
+    public static void processDocuments(String inputFolder, String outputFolder,
+                    boolean splitHeader) throws IOException {
         int i = 0;
-        List<String> textFiles = readWholeFolder(inputFolder);
-        for (String text : textFiles) {
-            List<String> splittedDocument = splitDocuments(text);
+        Map<String, String> textFiles = readWholeFolder(inputFolder);
+        for (Map.Entry<String, String> entry : textFiles.entrySet()) {
+            List<String> splittedDocument = splitDocuments(entry.getValue());
+            int docIdx = 0;
             for (String splittedDoc : splittedDocument) {
-                i++;
-                String cleanedDocument = removeDocumentHeader(splittedDoc);
-                writeFileToOutputFolder(outputFolder, cleanedDocument);
-                if (i % 10 == 0)
+                if (splitHeader) {
+                    splittedDoc = removeDocumentHeader(splittedDoc);
+                }
+                if (i % 10 == 0) {
                     log.info("Processed {} files", i);
+                }
+                writeFileToOutputFolder(outputFolder, entry.getKey() + "_" + docIdx, splittedDoc);
+                docIdx++;
             }
         }
     }
@@ -62,18 +65,17 @@ public class DocumentHandler {
      * @return list of strings from found files
      * @throws IOException
      */
-    protected static List<String> readWholeFolder(String inputFolder) throws IOException {
+    public static Map<String, String> readWholeFolder(String inputFolder) throws IOException {
         List<Path> filesInFolder = new ArrayList<>();
+        Map<String, String> fileMap = new HashMap<>();
         try (Stream<Path> paths = Files.walk(Paths.get(inputFolder))) {
             paths.filter(Files::isRegularFile).forEach(filesInFolder::add);
         }
-        List<String> textFiles = new ArrayList<>();
         for (Path path : filesInFolder) {
             String textFile = FileUtils.readFileToString(path.toFile(), Charsets.UTF_8);
-            textFiles.add(textFile);
+            fileMap.put(path.getFileName().toString(), textFile);
         }
-        return textFiles;
-
+        return fileMap;
     }
 
     /**
@@ -111,14 +113,12 @@ public class DocumentHandler {
      * @param outputFolder
      * @param documentBody
      */
-    protected static void writeFileToOutputFolder(String outputFolder, String documentBody) {
+    public static void writeFileToOutputFolder(String outputFolder, String fileName,
+                    String documentBody) {
         outputFolder = outputFolder.endsWith("/") ? outputFolder : outputFolder + "/";
-        String fileName =
-                        hash.newHasher().putString(documentBody, Charsets.UTF_8).hash().toString();
         try {
             FileUtils.writeStringToFile(new File(outputFolder + fileName + ".txt"), documentBody,
                             Charsets.UTF_8);
-            log.info("Wrote file {}", outputFolder + fileName + ".txt");
         } catch (IOException e) {
             log.error("Couldnt write file {} due to {}",
                             new File(outputFolder + fileName + ".txt").toString(), e.getMessage());
