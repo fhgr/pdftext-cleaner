@@ -32,3 +32,6 @@ target/
 .classpath
 .project
 .settings
+
+# individual files
+*.sh
