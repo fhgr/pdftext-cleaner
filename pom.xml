@@ -2,10 +2,10 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>ch.htwchur.integrity</groupId>
-	<artifactId>pdfhealer</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>PdfHealer</name>
+	<groupId>ch.htwchur.document</groupId>
+	<artifactId>preprocess</artifactId>
+	<version>0.0.2-SNAPSHOT</version>
+	<name>document-preprocessing</name>
 	<properties>
 		<log4j2.version>2.11.1</log4j2.version>
 		<log4j-slf4j-impl.version>2.11.1</log4j-slf4j-impl.version>
@@ -158,7 +158,6 @@
 			<artifactId>poi</artifactId>
 			<version>4.1.0</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.poi/ooxml-schemas -->
 		<!-- https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml -->
 		<dependency>
 			<groupId>org.apache.poi</groupId>
