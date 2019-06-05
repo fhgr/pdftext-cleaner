@@ -49,6 +49,7 @@ public class DocumentHandler {
                 if (splitHeader) {
                     splittedDoc = removeDocumentHeader(splittedDoc);
                 }
+                i++;
                 if (i % 10 == 0) {
                     log.info("Processed {} files", i);
                 }
