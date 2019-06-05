@@ -1,8 +1,9 @@
-package ch.htwchur.pdf.healer;
+package ch.htwchur.document.preprocess;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import ch.htwchur.document.preprocess.logic.DocumentHandler;
 /**
  * 
  * @author sandro.hoerler@htwchur.ch

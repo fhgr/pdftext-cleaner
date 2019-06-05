@@ -1,4 +1,4 @@
-package ch.htwchur.pdf.healer;
+package ch.htwchur.document.preprocess.logic;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,7 +46,7 @@ public class PdfPostProcessing {
      * @param text
      * @return cleaned String with merged words
      */
-    protected static String mergeSplittedWords(String text) {
+    public static String mergeSplittedWords(String text) {
         return text.replace("-\n ", "").replace("- \n", "").replace("-\n", "").replace("-\r ", "")
                         .replace("- \r", "").replace("-\r", "").replace("- ", "");
     }
@@ -60,7 +60,7 @@ public class PdfPostProcessing {
      * @param text
      * @return cleaned text
      */
-    protected static String mergeNewlinesIfNoPunctationOccurs(String text) {
+    public static String mergeNewlinesIfNoPunctationOccurs(String text) {
         Matcher matcher = newLineWithNoPunctationPattern.matcher(text);
         List<Pair<Integer, Integer>> matchedStartEndIdx = new ArrayList<>();
         while (matcher.find()) {
@@ -90,7 +90,7 @@ public class PdfPostProcessing {
      * @param text
      * @return text with merged words
      */
-    protected static String splitAccitentiallyMergedWordsWhenInwordUppercase(String text) {
+    public static String splitAccitentiallyMergedWordsWhenInwordUppercase(String text) {
         String[] splittedWords = text.split("(?<=\\p{javaLowerCase})(?=\\p{Lu})");
         StringBuilder sb = new StringBuilder();
         for (String splitts : splittedWords) {
@@ -115,7 +115,7 @@ public class PdfPostProcessing {
      * @param text
      * @return cleaned String
      */
-    protected static String removeUnreconziedSignsAndUnnecessaryCharacters(String text) {
+    public static String removeUnreconziedSignsAndUnnecessaryCharacters(String text) {
         return text.replace("\",\"", " ").replace("\"", "").replace("{", "").replace("}", "")
                         .replace("&amp;", "&").replace("^", "").replace("\\", " ").replace("■", "-")
                         .replace("", "-").replace("", "-").replace("", "-").replace("�", ".");
@@ -142,7 +142,7 @@ public class PdfPostProcessing {
      * @param lines
      * @return cleaned lines
      */
-    protected static String removePageKeywords(String line) {
+    public static String removePageKeywords(String line) {
         final List<String> keywords = Arrays.asList(new String[] {"seite", "page"});
         final int maxLineLength = 20;
         if (line.length() < maxLineLength) {
@@ -167,7 +167,7 @@ public class PdfPostProcessing {
      * @return List of lines with cleaned out empty lines and cleaned out lines with length lower
      *         then thresholdMinLineLength
      */
-    protected static List<String> removeReoccuringNewlines(String[] lines,
+    public static List<String> removeReoccuringNewlines(String[] lines,
                     int thresholdReoccuringEmptyLines, int thresholdMinLineLength) {
         final int thresholdToRemoveLF = 2;
         int consecutiveNewLines = 0;
@@ -203,7 +203,7 @@ public class PdfPostProcessing {
      * @param lines
      * @return processed lines
      */
-    protected static String[] processLines(String[] lines) {
+    public static String[] processLines(String[] lines) {
         for (int i = 0; i < lines.length; i++) {
             lines[i] = cleanUnmappableSignsIfOccuringWithNumberAtEndOfLine(lines[i]);
             lines[i] = removeUnreconziedSignsAndUnnecessaryCharacters(lines[i]);
@@ -221,7 +221,7 @@ public class PdfPostProcessing {
      * @param Strings to check and merge
      * @return cleaned and merged strings
      */
-    protected static String mergeWhitespacesLettersOfAWord(String line) {
+    public static String mergeWhitespacesLettersOfAWord(String line) {
         Matcher matcher = WHITESPACE_PATTERN.matcher(line);
         StringBuilder sb = new StringBuilder();
         while (matcher.find()) {

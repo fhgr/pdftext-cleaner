@@ -40,3 +40,6 @@ use `-prepare` in combination with `-inputDir` and `-outputDir.`
 
 ### Pick specified amount of files in randomized manner, create a csv file with the randomized filenames and write files and csv file to outputFolder
 use `-pick {amount}` `-csvfile {only filename}` `-inputDir` `-outputDir`
+
+### Extracts files with .docx ending to plain text
+use `-e` `-doc` `-inputDir` `-ouputDir`

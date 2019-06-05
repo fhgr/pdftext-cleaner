@@ -1,4 +1,4 @@
-package ch.htwchur.pdf.healer;
+package ch.htwchur.document.preprocess.logic;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package ch.htwchur.pdf.healer;
+package ch.htwchur.document.preprocess.logic;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,12 +57,26 @@ public class DocumentHandler {
             }
         }
     }
-
+    /**
+     * Reads all files in a Folder.
+     * @param inputFolder folder to read from
+     * @return List of all files as Path
+     * @throws IOException
+     */
+    public static List<Path> readAllFilesFromDirectory(String inputFolder) throws IOException{
+        List<Path> filesInFolder = new ArrayList<>();
+        Map<String, String> fileMap = new HashMap<>();
+        try (Stream<Path> paths = Files.walk(Paths.get(inputFolder))) {
+            paths.filter(Files::isRegularFile).forEach(filesInFolder::add);
+        }
+        return filesInFolder;
+    }
+    
     /**
      * Reads whole inputfolder files
      * 
      * @param inputFolder
-     * @return list of strings from found files
+     * @return map of strings from found files. Key -> filename, Value -> filecontent
      * @throws IOException
      */
     public static Map<String, String> readWholeFolder(String inputFolder) throws IOException {
@@ -84,7 +98,7 @@ public class DocumentHandler {
      * @param document
      * @return list of splitted docuuments
      */
-    protected static List<String> splitDocuments(String document) {
+    public static List<String> splitDocuments(String document) {
         List<String> splittedDocument = new ArrayList<>();
         String[] splitted = document.split(RGX_SPLIT_DOC);
         splittedDocument.addAll(Arrays.asList(splitted));
@@ -97,7 +111,7 @@ public class DocumentHandler {
      * @param document
      * @return
      */
-    protected static String removeDocumentHeader(String document) {
+    public static String removeDocumentHeader(String document) {
         String[] headerBodySplitted = document.split(RGX_REMOVE_DOC_HEADER);
         if (headerBodySplitted.length == 1) {
             headerBodySplitted = document.split(RGX_REMOVE_SIGN_DOC_HEADER);

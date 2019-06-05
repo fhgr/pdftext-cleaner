@@ -1,4 +1,4 @@
-package ch.htwchur.pdf.healer.validation;
+package ch.htwchur.document.preprocess.validation;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import ch.htwchur.pdf.healer.DocumentHandler;
+import ch.htwchur.document.preprocess.logic.DocumentHandler;
 import lombok.extern.slf4j.Slf4j;
 /**
  * 

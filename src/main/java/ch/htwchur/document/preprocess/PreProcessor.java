@@ -1,4 +1,4 @@
-package ch.htwchur.pdf.healer;
+package ch.htwchur.document.preprocess;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +14,12 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import ch.htwchur.pdf.healer.validation.RandomFilePicker;
+import ch.htwchur.document.preprocess.logic.CSVtoTextExtractor;
+import ch.htwchur.document.preprocess.logic.DocumentHandler;
+import ch.htwchur.document.preprocess.logic.DocxToTextExtractor;
+import ch.htwchur.document.preprocess.logic.Pdf2TextExtractor;
+import ch.htwchur.document.preprocess.logic.PdfPostProcessing;
+import ch.htwchur.document.preprocess.validation.RandomFilePicker;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -24,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public class PdfHealer {
+public class PreProcessor {
     /**
      * Generates options
      * 
@@ -53,6 +58,8 @@ public class PdfHealer {
                         .build();
         final Option csvFileName = Option.builder("csvfile").required(false).hasArg(true)
                         .longOpt("defines csv filename in combination with pick argument").build();
+        final Option extractDoc = Option.builder("doc").required(false).hasArg(false)
+                        .longOpt("extracts docx file to text").build();
         final Options options = new Options();
         options.addOption(inputFile);
         options.addOption(outputFile);
@@ -64,6 +71,7 @@ public class PdfHealer {
         options.addOption(removeHeader);
         options.addOption(csvFileName);
         options.addOption(pickAmount);
+        options.addOption(extractDoc);
         return options;
     }
 
@@ -96,8 +104,12 @@ public class PdfHealer {
                             cmd.getOptionValue("outputDir"), csvFilename);
             return;
         }
-
         if (cmd.hasOption("e")) {
+            if (cmd.hasOption("doc")) {
+                DocxToTextExtractor.extractDocxFilesToText(cmd.getOptionValue("inputDir"),
+                                cmd.getOptionValue("outputDir"));
+                return;
+            }
             if (cmd.hasOption("start")) {
                 startPage = Integer.parseInt(cmd.getOptionValue("start"));
             }

@@ -1,4 +1,4 @@
-package ch.htwchur.pdf.healer.validation;
+package ch.htwchur.document.preprocess.validation;
 
 import java.io.FileWriter;
 import java.io.IOException;
