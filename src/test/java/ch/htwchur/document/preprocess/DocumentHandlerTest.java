@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import ch.htwchur.document.preprocess.logic.DocumentHandler;
+
 /**
  * 
  * @author sandro.hoerler@htwchur.ch
@@ -28,20 +29,44 @@ public class DocumentHandlerTest {
         String cleanedDoc = DocumentHandler.removeDocumentHeader("89 Wörter\n"
                         + "3 September 2014\n" + "Tages Anzeiger\n" + "TANZ\n" + "Deutsch\n"
                         + "(c) 2014 Tages Anzeiger Homepage Address:   http://www.tages-anzeiger.ch\n"
-                        + "\n"
-                        + EXP_HEADER_REMOVAL);
+                        + "\n" + EXP_HEADER_REMOVAL);
         System.out.println(cleanedDoc);
         assertEquals(EXP_HEADER_REMOVAL, cleanedDoc);
     }
-    
+
     @Test
     public void testCopyrightSignHeaderRemoval() {
         String cleanedDoc = DocumentHandler.removeDocumentHeader("89 Wörter\n"
                         + "3 September 2014\n" + "Tages Anzeiger\n" + "TANZ\n" + "Deutsch\n"
                         + "© 2014 Tages Anzeiger Homepage Address:   http://www.tages-anzeiger.ch\n"
-                        + "\n"
-                        + EXP_HEADER_REMOVAL);
+                        + "\n" + EXP_HEADER_REMOVAL);
         System.out.println(cleanedDoc);
         assertEquals(EXP_HEADER_REMOVAL, cleanedDoc);
+    }
+
+    @Test
+    public void testCopyrightBracketHeaderRemoval() {
+        String doc = "Inland GES\n" + "Die Zigarettenmafia kommt auf die Anklagebank\n" + "\n"
+                        + "René Lenzin, Lugano   \n" + "515 Wörter\n" + "7 Oktober 2008\n"
+                        + "Tages Anzeiger\n" + "TANZ\n" + "3ges\n" + "Deutsch\n"
+                        + "(c) 2008 Tages Anzeiger Homepage Address:   http://www.tages-anzeiger.ch\n"
+                        + "\n"
+                        + "Die Bundesanwaltschaft erhebt Anklage gegen 10 mutmassliche Mitglieder der Zigarettenmafia. Sie sollen Geldwäscherei in Milliardenhöhe begangen haben.\n";
+
+        String cleanedDoc = DocumentHandler.removeDocumentHeader(doc);
+        System.out.println(cleanedDoc);
+        assertEquals("Die Bundesanwaltschaft erhebt Anklage gegen 10 mutmassliche Mitglieder der Zigarettenmafia. Sie sollen Geldwäscherei in Milliardenhöhe begangen haben."
+                        + "", cleanedDoc);
+    }
+
+    @Test
+    public void testCopyrightNzzHeaderRemoval() {
+        String doc = "Neue Zürcher Zeitung\n" + "NEUZZ\n" + "Deutsch\n"
+                        + "Besuchen Sie die Website der führenden Schweizer Internationalen Tageszeitung unter http://www.nzz.ch sdfs\n"
+                        + " Michailow - russischer Geschäftsmann oder Gangster-Boss?";
+
+        String cleanedDoc = DocumentHandler.removeDocumentHeader(doc);
+        System.out.println(cleanedDoc);
+        assertEquals("Michailow - russischer Geschäftsmann oder Gangster-Boss?", cleanedDoc);
     }
 }

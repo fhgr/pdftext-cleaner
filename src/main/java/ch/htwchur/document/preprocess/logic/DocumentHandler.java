@@ -24,11 +24,11 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class DocumentHandler {
-    private static final String RGX_REMOVE_DOC_HEADER =
-                    "(?m)^.*?\\b(copyright|Copyright|(c))\\b.*$";
+    private static final String RGX_REMOVE_DOC_HEADER = "(?m)^.*?\\b(copyright|Copyright)\\b.*$";
     private static final String RGX_REMOVE_SIGN_DOC_HEADER = "(?m)^©.*$";
     private static final String RGX_SPLIT_DOC = "(?m)^Dokument \\w+$";
-
+    private static final String RGX_REMOVE_C_IN_BRACKETS = "(?m)^\\((c)\\).*$";
+    private static final String RGX_REMOVE_NZZ_HEADER = "(?m)^Besuchen Sie die Website.*$";
     public static Pattern documentSplitPattern;
 
     /**
@@ -58,13 +58,15 @@ public class DocumentHandler {
             }
         }
     }
+
     /**
      * Reads all files in a Folder.
+     * 
      * @param inputFolder folder to read from
      * @return List of all files as Path
      * @throws IOException
      */
-    public static List<Path> readAllFilesFromDirectory(String inputFolder) throws IOException{
+    public static List<Path> readAllFilesFromDirectory(String inputFolder) throws IOException {
         List<Path> filesInFolder = new ArrayList<>();
         Map<String, String> fileMap = new HashMap<>();
         try (Stream<Path> paths = Files.walk(Paths.get(inputFolder))) {
@@ -72,7 +74,7 @@ public class DocumentHandler {
         }
         return filesInFolder;
     }
-    
+
     /**
      * Reads whole inputfolder files
      * 
@@ -107,15 +109,22 @@ public class DocumentHandler {
     }
 
     /**
-     * removes content above and including {@linkplain #RGX_REMOVE_DOC_HEADER}}
+     * Removes content above and including {@linkplain #RGX_REMOVE_DOC_HEADER},
+     * {@linkplain #RGX_REMOVE_C_IN_BRACKETS}, {@linkplain #RGX_REMOVE_SIGN_DOC_HEADER}.
      * 
-     * @param document
-     * @return
+     * @param document document to remove header
+     * @return document with removed header if a pattern matched
      */
     public static String removeDocumentHeader(String document) {
         String[] headerBodySplitted = document.split(RGX_REMOVE_DOC_HEADER);
         if (headerBodySplitted.length == 1) {
             headerBodySplitted = document.split(RGX_REMOVE_SIGN_DOC_HEADER);
+        }
+        if (headerBodySplitted.length == 1) {
+            headerBodySplitted = document.split(RGX_REMOVE_C_IN_BRACKETS);
+        }
+        if (headerBodySplitted.length == 1) {
+            headerBodySplitted = document.split(RGX_REMOVE_NZZ_HEADER);
         }
         return headerBodySplitted.length > 1 ? headerBodySplitted[1].trim()
                         : headerBodySplitted[0].trim();
