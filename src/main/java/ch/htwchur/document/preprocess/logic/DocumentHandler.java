@@ -1,18 +1,25 @@
 package ch.htwchur.document.preprocess.logic;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,6 +36,10 @@ public class DocumentHandler {
     private static final String RGX_SPLIT_DOC = "(?m)^Dokument \\w+$";
     private static final String RGX_REMOVE_C_IN_BRACKETS = "(?m)^\\((c)\\).*$";
     private static final String RGX_REMOVE_NZZ_HEADER = "(?m)^Besuchen Sie die Website.*$";
+
+    private static final String RGX_REMOVE_ARTIKEL_ANZEIGEN = "(?m)^Artikel anzeigen.*$";
+    private static final String RGX_REMOVE_ERSTELLT = "(?m)^Erstellt: .*$";
+    private static final String RGX_REMOVE_WHO_WROTE_WHEN = "(?m).*Uhr$";
     public static Pattern documentSplitPattern;
 
     /**
@@ -39,9 +50,14 @@ public class DocumentHandler {
      * @throws IOException
      */
     public static void processDocuments(String inputFolder, String outputFolder,
-                    boolean splitHeader) throws IOException {
+                    boolean splitHeader, boolean zipFile) throws IOException {
         int i = 0;
-        Map<String, String> textFiles = readWholeFolder(inputFolder);
+        Map<String, String> textFiles = null;
+        if (!zipFile) {
+            textFiles = readWholeFolder(inputFolder);
+        } else {
+            textFiles = readFileFromZip(inputFolder);
+        }
         for (Map.Entry<String, String> entry : textFiles.entrySet()) {
             List<String> splittedDocument = splitDocuments(entry.getValue());
             int docIdx = 0;
@@ -57,6 +73,52 @@ public class DocumentHandler {
                 docIdx++;
             }
         }
+        log.info("Wrote {} files", i);
+    }
+
+    /**
+     * Read txt files from a zip files
+     * 
+     * @param paths list of zip paths
+     * @return map of filename and its text content
+     */
+    private static Map<String, String> readFileFromZip(String inputFolder) throws IOException {
+        Map<String, String> contentMap = new HashMap<>();
+        List<Path> filesInFolder = new ArrayList<>();
+        try (Stream<Path> paths = Files.walk(Paths.get(inputFolder))) {
+            paths.filter(Files::isRegularFile).forEach(filesInFolder::add);
+        }
+        for (Path path : filesInFolder) {
+            try (ZipFile zip = new ZipFile(path.toFile())) {
+                Enumeration<? extends ZipEntry> e = zip.entries();
+                log.info("Reading file {}", path.toFile());
+                while (e.hasMoreElements()) {
+                    ZipEntry entry = e.nextElement();
+                    if (!entry.isDirectory()) {
+                        if (FilenameUtils.getExtension(entry.getName()).equals("txt")) {
+                            StringBuilder sb = getTxtFiles(zip.getInputStream(entry));
+                            contentMap.put(entry.getName().split(".txt")[0], sb.toString());
+                        }
+                    }
+                }
+            }
+        }
+        return contentMap;
+    }
+
+    private static StringBuilder getTxtFiles(InputStream in) {
+        StringBuilder out = new StringBuilder();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+        String line;
+        try {
+            while ((line = reader.readLine()) != null) {
+                out.append(line);
+            }
+        } catch (IOException e) {
+            // do something, probably not a text file
+            e.printStackTrace();
+        }
+        return out;
     }
 
     /**
@@ -68,7 +130,6 @@ public class DocumentHandler {
      */
     public static List<Path> readAllFilesFromDirectory(String inputFolder) throws IOException {
         List<Path> filesInFolder = new ArrayList<>();
-        Map<String, String> fileMap = new HashMap<>();
         try (Stream<Path> paths = Files.walk(Paths.get(inputFolder))) {
             paths.filter(Files::isRegularFile).forEach(filesInFolder::add);
         }
@@ -126,8 +187,23 @@ public class DocumentHandler {
         if (headerBodySplitted.length == 1) {
             headerBodySplitted = document.split(RGX_REMOVE_NZZ_HEADER);
         }
-        return headerBodySplitted.length > 1 ? headerBodySplitted[1].trim()
-                        : headerBodySplitted[0].trim();
+        if (headerBodySplitted.length == 0) {
+            return "";
+        }
+        return removeDocumentNoisyParts(headerBodySplitted.length > 1 ? headerBodySplitted[1].trim()
+                        : headerBodySplitted[0].trim());
+    }
+
+    /**
+     * Removes commonly occuring parts in a document
+     * 
+     * @param document
+     * @return
+     */
+    private static String removeDocumentNoisyParts(String document) {
+        return document.replaceAll(RGX_REMOVE_ARTIKEL_ANZEIGEN, "")
+                        .replaceAll(RGX_REMOVE_WHO_WROTE_WHEN, "")
+                        .replaceAll(RGX_REMOVE_ERSTELLT, "");
     }
 
     /**

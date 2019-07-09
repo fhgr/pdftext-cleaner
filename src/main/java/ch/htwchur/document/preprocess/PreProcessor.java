@@ -60,6 +60,8 @@ public class PreProcessor {
                         .longOpt("defines csv filename in combination with pick argument").build();
         final Option extractDoc = Option.builder("doc").required(false).hasArg(false)
                         .longOpt("extracts docx file to text").build();
+        final Option zipFile = Option.builder("zip").required(false).hasArg(false)
+                        .longOpt("choose zip files from input dir").build();
         final Options options = new Options();
         options.addOption(inputFile);
         options.addOption(outputFile);
@@ -72,6 +74,7 @@ public class PreProcessor {
         options.addOption(csvFileName);
         options.addOption(pickAmount);
         options.addOption(extractDoc);
+        options.addOption(zipFile);
         return options;
     }
 
@@ -92,8 +95,9 @@ public class PreProcessor {
             return;
         }
         if (cmd.hasOption("prepare")) {
+            
             DocumentHandler.processDocuments(cmd.getOptionValue("inputDir"),
-                            cmd.getOptionValue("outputDir"), cmd.hasOption("header"));
+                            cmd.getOptionValue("outputDir"), cmd.hasOption("header"), cmd.hasOption("zip"));
             return;
         }
         if (cmd.hasOption("pick")) {
