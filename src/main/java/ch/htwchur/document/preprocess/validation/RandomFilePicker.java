@@ -37,12 +37,14 @@ public class RandomFilePicker {
             List<String> keys = new ArrayList<String>(entries);
             String key = keys.get(rnd.nextInt(keys.size()));
             String text = documentFilenameMap.remove(key);
-            DocumentHandler.writeFileToOutputFolder(outputFolder, key, text);
-            pickedFilenames.add(key);
-            if (progressCount % 100 == 0) {
-                log.info("Wrote {} files...", progressCount);
+            if(!(text == null || text.length() < 100)){
+                DocumentHandler.writeFileToOutputFolder(outputFolder, key, text);
+                pickedFilenames.add(key);
+                if (progressCount % 100 == 0) {
+                    log.info("Wrote {} files...", progressCount);
             }
-            progressCount++;
+                progressCount++;
+            }
         }
         CsvFilenameExporter.writenamesToCsv(pickedFilenames, outputFolder, csvFilename);
     }

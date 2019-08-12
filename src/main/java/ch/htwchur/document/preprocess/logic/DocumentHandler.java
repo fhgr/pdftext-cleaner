@@ -33,13 +33,14 @@ import lombok.extern.slf4j.Slf4j;
 public class DocumentHandler {
     private static final String RGX_REMOVE_DOC_HEADER = "(?m)^.*?\\b(copyright|Copyright)\\b.*$";
     private static final String RGX_REMOVE_SIGN_DOC_HEADER = "(?m)^©.*$";
-    private static final String RGX_SPLIT_DOC = "(?m)^Dokument \\w+$";
+    private static final String RGX_SPLIT_DOC = "(?m)^(Dokument|Document) \\w+$";
     private static final String RGX_REMOVE_C_IN_BRACKETS = "(?m)^\\((c)\\).*$";
     private static final String RGX_REMOVE_NZZ_HEADER = "(?m)^Besuchen Sie die Website.*$";
 
     private static final String RGX_REMOVE_ARTIKEL_ANZEIGEN = "(?m)^Artikel anzeigen.*$";
     private static final String RGX_REMOVE_ERSTELLT = "(?m)^Erstellt: .*$";
     private static final String RGX_REMOVE_WHO_WROTE_WHEN = "(?m).*Uhr$";
+//    private static final String RGX_REMOVE_INDEX_HEAD_FAKTIVA = "^\\w*.*$";
     public static Pattern documentSplitPattern;
 
     /**
