@@ -48,3 +48,6 @@ use `-pick {amount}` `-csvfile {only filename}` `-inputDir` `-outputDir`
 
 ### Extracts files with .docx ending to plain text
 use `-e` `-doc` `-inputDir` `-ouputDir`
+
+### Extract content part to simple text of a persisted WL-Document json
+use `-document` `-inputDir` `-ouputDir`

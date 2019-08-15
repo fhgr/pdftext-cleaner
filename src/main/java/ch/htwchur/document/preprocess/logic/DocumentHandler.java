@@ -14,13 +14,16 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
+import com.weblyzard.api.model.document.Document;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -40,7 +43,7 @@ public class DocumentHandler {
     private static final String RGX_REMOVE_ARTIKEL_ANZEIGEN = "(?m)^Artikel anzeigen.*$";
     private static final String RGX_REMOVE_ERSTELLT = "(?m)^Erstellt: .*$";
     private static final String RGX_REMOVE_WHO_WROTE_WHEN = "(?m).*Uhr$";
-//    private static final String RGX_REMOVE_INDEX_HEAD_FAKTIVA = "^\\w*.*$";
+    // private static final String RGX_REMOVE_INDEX_HEAD_FAKTIVA = "^\\w*.*$";
     public static Pattern documentSplitPattern;
 
     /**
@@ -223,6 +226,31 @@ public class DocumentHandler {
         } catch (IOException e) {
             log.error("Couldnt write file {} due to {}",
                             new File(outputFolder + fileName + ".txt").toString(), e.getMessage());
+        }
+    }
+
+    /**
+     * Loads json files of persisted WL-Document Objects, extracts the content part and serializes
+     * to disk. The filename will be kept
+     * 
+     * @param inputFolder
+     * @param outputFolder
+     * @throws IOException
+     */
+    public static void writeContentPartOfDocument(String inputFolder, String outputFolder)
+                    throws IOException {
+        Map<String, String> filesAndNames = readWholeFolder(inputFolder);
+        ObjectMapper mapper = new ObjectMapper();
+        log.info("Found {} files in folder {}, starting content extraction...",
+                        filesAndNames.size(), inputFolder);
+        int i = 0;
+        for (Entry<String, String> entry : filesAndNames.entrySet()) {
+            i++;
+            if (i % 100 == 0) {
+                log.info("Processing files {} of {}", i, filesAndNames.size());
+            }
+            writeFileToOutputFolder(outputFolder, entry.getKey(),
+                            mapper.readValue(entry.getValue(), Document.class).getContent());
         }
     }
 }

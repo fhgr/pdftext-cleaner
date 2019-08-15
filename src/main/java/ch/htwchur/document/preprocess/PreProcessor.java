@@ -62,6 +62,8 @@ public class PreProcessor {
                         .longOpt("extracts docx file to text").build();
         final Option zipFile = Option.builder("zip").required(false).hasArg(false)
                         .longOpt("choose zip files from input dir").build();
+        final Option documentContent = Option.builder("document").required(false).hasArg(false)
+                        .longOpt("extract content part of a json wl-document").build();
         final Options options = new Options();
         options.addOption(inputFile);
         options.addOption(outputFile);
@@ -75,6 +77,7 @@ public class PreProcessor {
         options.addOption(pickAmount);
         options.addOption(extractDoc);
         options.addOption(zipFile);
+        options.addOption(documentContent);
         return options;
     }
 
@@ -90,14 +93,19 @@ public class PreProcessor {
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = parser.parse(options, args);
         int startPage = 0;
+        if (cmd.hasOption("document")) {
+            DocumentHandler.writeContentPartOfDocument(cmd.getOptionValue("inputDir"),
+                            cmd.getOptionValue("outputDir"));
+        }
         if (cmd.hasOption("csv")) {
             extractCSVtoTextFiles(cmd.getOptionValue("inputDir"), cmd.getOptionValue("outputDir"));
             return;
         }
         if (cmd.hasOption("prepare")) {
-            
+
             DocumentHandler.processDocuments(cmd.getOptionValue("inputDir"),
-                            cmd.getOptionValue("outputDir"), cmd.hasOption("header"), cmd.hasOption("zip"));
+                            cmd.getOptionValue("outputDir"), cmd.hasOption("header"),
+                            cmd.hasOption("zip"));
             return;
         }
         if (cmd.hasOption("pick")) {

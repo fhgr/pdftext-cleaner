@@ -13,16 +13,18 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- *  Docx to plain text extractor
+ * Docx to plain text extractor
+ * 
  * @author sandro.hoerler@htwchur.ch
  *
  */
 @Slf4j
 public class DocxToTextExtractor {
-    
+
     /**
      * Extracts docx files to plain text from inputFolder to outputFolder
-     * @param inputFolder Folder with docx files to extract
+     * 
+     * @param inputFolder  Folder with docx files to extract
      * @param outputFolder Folder to persist extracted plain text files
      * @throws IOException
      */
@@ -42,8 +44,7 @@ public class DocxToTextExtractor {
     }
 
     /**
-     * Reads all docx files and extracts them.
-     * Checks if file ending is .docx
+     * Reads all docx files and extracts them. Checks if file ending is .docx
      * 
      * @param paths List of Paths to extract
      * @return Map of filenames and their extracted content. key -> filename, value -> extracted
