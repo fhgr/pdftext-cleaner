@@ -39,6 +39,7 @@ public class DocumentHandler {
     private static final String RGX_SPLIT_DOC = "(?m)^(Dokument|Document) \\w+$";
     private static final String RGX_REMOVE_C_IN_BRACKETS = "(?m)^\\((c)\\).*$";
     private static final String RGX_REMOVE_NZZ_HEADER = "(?m)^Besuchen Sie die Website.*$";
+    private static final String RGX_REMOVE_TIMES_HEADER = "(?m).*Times Newspapers Ltd. All rights reserved.*$";
 
     private static final String RGX_REMOVE_ARTIKEL_ANZEIGEN = "(?m)^Artikel anzeigen.*$";
     private static final String RGX_REMOVE_ERSTELLT = "(?m)^Erstellt: .*$";
@@ -190,6 +191,9 @@ public class DocumentHandler {
         }
         if (headerBodySplitted.length == 1) {
             headerBodySplitted = document.split(RGX_REMOVE_NZZ_HEADER);
+        }
+        if(headerBodySplitted.length == 1) {
+            headerBodySplitted = document.split(RGX_REMOVE_TIMES_HEADER);
         }
         if (headerBodySplitted.length == 0) {
             return "";

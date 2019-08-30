@@ -51,3 +51,11 @@ use `-e` `-doc` `-inputDir` `-ouputDir`
 
 ### Extract content part to simple text of a persisted WL-Document json
 use `-document` `-inputDir` `-ouputDir`
+
+### Use CSV to copy files into categories folders
+The CSV file must have the structure: 
+* column1: filenames w/o path
+* column2: category
+
+The category folders are created automatically
+use `-createset` - `-filename {path to csv file}` `-inputDir {dir who holds files}`, `-outputDir {dir where categories and files should be written}`

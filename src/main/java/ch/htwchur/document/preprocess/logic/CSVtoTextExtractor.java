@@ -34,7 +34,7 @@ public class CSVtoTextExtractor {
      */
     public static void extractWeblyzardExportFileToTextFiles(String inputPath, String outputPath)
                     throws IOException {
-        Map<String, String> hashTextMap = readCSVIntoPairs(inputPath, CSVFormat.DEFAULT);
+        Map<String, String> hashTextMap = readCSVIntoPairs(inputPath, CSVFormat.EXCEL.withDelimiter(';'));
         outputPath = outputPath.endsWith("/") ? outputPath : outputPath + "/";
         int i = 0;
         for (Map.Entry<String, String> entry : hashTextMap.entrySet()) {

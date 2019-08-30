@@ -19,6 +19,7 @@ import ch.htwchur.document.preprocess.logic.DocumentHandler;
 import ch.htwchur.document.preprocess.logic.DocxToTextExtractor;
 import ch.htwchur.document.preprocess.logic.Pdf2TextExtractor;
 import ch.htwchur.document.preprocess.logic.PdfPostProcessing;
+import ch.htwchur.document.preprocess.logic.ReadCsvAndMoveFilesToCategories;
 import ch.htwchur.document.preprocess.validation.RandomFilePicker;
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,6 +65,13 @@ public class PreProcessor {
                         .longOpt("choose zip files from input dir").build();
         final Option documentContent = Option.builder("document").required(false).hasArg(false)
                         .longOpt("extract content part of a json wl-document").build();
+        final Option createTrainingSetOutOfCSVFile = Option.builder("createset").required(false)
+                        .hasArg(false)
+                        .longOpt("Read csv file and moves files to predefined location depending on teir category -> filename row must be named \"name\", category row must be named as \"category\"")
+                        .build();
+        final Option fileName = Option.builder("filename").required(false).hasArg(true)
+                        .longOpt("Filename to operate with").longOpt("Filename to read csv from...")
+                        .build();
         final Options options = new Options();
         options.addOption(inputFile);
         options.addOption(outputFile);
@@ -78,6 +86,8 @@ public class PreProcessor {
         options.addOption(extractDoc);
         options.addOption(zipFile);
         options.addOption(documentContent);
+        options.addOption(createTrainingSetOutOfCSVFile);
+        options.addOption(fileName);
         return options;
     }
 
@@ -93,6 +103,14 @@ public class PreProcessor {
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = parser.parse(options, args);
         int startPage = 0;
+        if (cmd.hasOption("createset")) {
+            String filename = cmd.getOptionValue("filename");
+            log.info("Reading csv file {}, creating category folders and moving items into...",
+                            filename);
+            ReadCsvAndMoveFilesToCategories.copyFilesFromCsv(cmd.getOptionValue("inputDir"),
+                            cmd.getOptionValue("outputDir"), filename);
+            return;
+        }
         if (cmd.hasOption("document")) {
             DocumentHandler.writeContentPartOfDocument(cmd.getOptionValue("inputDir"),
                             cmd.getOptionValue("outputDir"));
