@@ -16,7 +16,7 @@ public class GermanPreprocessor implements TokenPreProcess {
         token = token.toLowerCase().replaceAll("[\\p{Punct}\\d\\.:,\"\'\\(\\)\\[\\]|/?!;]+", "")
                         .replace("«", "").replace("»", "").replace("”", "").replace("„", "")
                         .replace("“", "").trim();
-        return (!StopWords.GERMAN_STOP_WORDS.contains(token) && token.length() > 2)  ? token : null;
+        return (!StopWords.GERMAN_STOP_WORDS.contains(token) && token.length() > 2)  ? token : "";
     }
 
     /**

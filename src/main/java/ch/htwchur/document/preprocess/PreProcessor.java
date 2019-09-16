@@ -19,6 +19,7 @@ import ch.htwchur.document.preprocess.logic.DocumentHandler;
 import ch.htwchur.document.preprocess.logic.DocxToTextExtractor;
 import ch.htwchur.document.preprocess.logic.Pdf2TextExtractor;
 import ch.htwchur.document.preprocess.logic.PdfPostProcessing;
+import ch.htwchur.document.preprocess.logic.PreprocessTextWithGermanPreprocessor;
 import ch.htwchur.document.preprocess.logic.ReadCsvAndMoveFilesToCategories;
 import ch.htwchur.document.preprocess.validation.RandomFilePicker;
 import lombok.extern.slf4j.Slf4j;
@@ -72,6 +73,9 @@ public class PreProcessor {
         final Option fileName = Option.builder("filename").required(false).hasArg(true)
                         .longOpt("Filename to operate with").longOpt("Filename to read csv from...")
                         .build();
+        final Option preprocessFilesWithGermanStopwords = Option.builder("german_stop")
+                        .required(false).hasArg(false)
+                        .longOpt("preprocess files with german preprocessor").build();
         final Options options = new Options();
         options.addOption(inputFile);
         options.addOption(outputFile);
@@ -88,6 +92,7 @@ public class PreProcessor {
         options.addOption(documentContent);
         options.addOption(createTrainingSetOutOfCSVFile);
         options.addOption(fileName);
+        options.addOption(preprocessFilesWithGermanStopwords);
         return options;
     }
 
@@ -103,6 +108,13 @@ public class PreProcessor {
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = parser.parse(options, args);
         int startPage = 0;
+        if(cmd.hasOption("german_stop")) {
+            String inputDir = cmd.getOptionValue("inputDir");
+            String outputDir = cmd.getOptionValue("outputDir");
+            log.info("Preprocessing files from directory {} with german preprocessor, saving them to {}", inputDir, outputDir);
+            PreprocessTextWithGermanPreprocessor.preprocessTextFiles(inputDir, outputDir);
+            return;
+        }
         if (cmd.hasOption("createset")) {
             String filename = cmd.getOptionValue("filename");
             log.info("Reading csv file {}, creating category folders and moving items into...",

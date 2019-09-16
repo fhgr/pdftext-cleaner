@@ -59,3 +59,7 @@ The CSV file must have the structure:
 
 The category folders are created automatically
 use `-createset` - `-filename {path to csv file}` `-inputDir {dir who holds files}`, `-outputDir {dir where categories and files should be written}`
+
+### Test Preprocessor on text
+Writes preprocessd text into outputDir to check outcome
+use `german_stop` `-inputDir` `-outputDir`
