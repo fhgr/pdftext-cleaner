@@ -16,6 +16,6 @@ public class EnglishPreprocessor implements TokenPreProcess {
         token = token.toLowerCase().replaceAll("[\\p{Punct}\\d\\.:,\"\'\\(\\)\\[\\]|/?!;]+", "")
                         .replace("«", "").replace("»", "").replace("”", "").replace("„", "")
                         .replace("“", "").trim();
-        return (!StopWords.ENGLISH_STOP_WORDS.contains(token) && token.length() > 2)  ? token : null;
+        return (!StopWords.ENGLISH_STOP_WORDS.contains(token) && token.length() > 2)  ? token : "";
     }
 }

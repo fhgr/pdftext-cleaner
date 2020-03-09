@@ -1,7 +1,7 @@
 package ch.htwchur.document.preprocess;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import ch.htwchur.document.preprocess.logic.DocumentHandler;
 
@@ -17,8 +17,11 @@ public class DocumentHandlerTest {
 
     @Test
     public void testDocumentSplitting() {
-        List<String> docs = DocumentHandler.splitDocuments(
-                        "immer wieder Fälle, da weiss man genau, wie krumme Geschäfte abgelaufen sind. Trotzdem kann man sie nicht zur Anklage bringen, weil für eine Verurteilung – salopp ausgedrückt – zu wenig Fleisch am Knochen ist.»\n"
+        Map<String,String> docs = DocumentHandler.splitDocuments(
+                        "654 Wörter\n" + 
+                        "30 April 2003\n" + 
+                        "Der Standard\n" + 
+                        "DSTANimmer wieder Fälle, da weiss man genau, wie krumme Geschäfte abgelaufen sind. Trotzdem kann man sie nicht zur Anklage bringen, weil für eine Verurteilung – salopp ausgedrückt – zu wenig Fleisch am Knochen ist.»\n"
                                         + "\n" + "Dokument TANZ000020140903ea930001b\n" + "\n"
                                         + "\n" + "\n" + "\n" + "Schweiz\n" + "Korruption");
         assertEquals(2, docs.size());

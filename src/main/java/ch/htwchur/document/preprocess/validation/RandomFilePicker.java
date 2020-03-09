@@ -1,6 +1,7 @@
 package ch.htwchur.document.preprocess.validation;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -27,9 +28,9 @@ public class RandomFilePicker {
      * @param outputFolder fodler to write into
      * @throws IOException
      */
-    public static void pickAmountOfFiles(int amount, String inputFolder, String outputFolder, String csvFilename)
+    public static void pickAmountOfFiles(int amount, String inputFolder, String outputFolder, String csvFilename, Charset charset)
                     throws IOException {
-        Map<String, String> documentFilenameMap = DocumentHandler.readWholeFolder(inputFolder);
+        Map<String, String> documentFilenameMap = DocumentHandler.readWholeFolder(inputFolder, charset);
         Random rnd = new Random();
         int progressCount = 0;
         for (int i = 0; i <= amount; i++) {

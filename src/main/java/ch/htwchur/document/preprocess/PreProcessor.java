@@ -2,6 +2,7 @@ package ch.htwchur.document.preprocess;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -21,7 +22,9 @@ import ch.htwchur.document.preprocess.logic.Pdf2TextExtractor;
 import ch.htwchur.document.preprocess.logic.PdfPostProcessing;
 import ch.htwchur.document.preprocess.logic.PreprocessTextWithGermanPreprocessor;
 import ch.htwchur.document.preprocess.logic.ReadCsvAndMoveFilesToCategories;
+import ch.htwchur.document.preprocess.logic.RtfToTextExtractor;
 import ch.htwchur.document.preprocess.validation.RandomFilePicker;
+import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -76,6 +79,11 @@ public class PreProcessor {
         final Option preprocessFilesWithGermanStopwords = Option.builder("german_stop")
                         .required(false).hasArg(false)
                         .longOpt("preprocess files with german preprocessor").build();
+        final Option charset = Option.builder("charset").required(false).hasArg(true)
+                        .longOpt("Charset of input files").build();
+        final Option rtf = Option.builder("rtf").required(false).hasArg(false)
+                        .longOpt("Extracts RTF to plain textx").build();
+
         final Options options = new Options();
         options.addOption(inputFile);
         options.addOption(outputFile);
@@ -93,6 +101,8 @@ public class PreProcessor {
         options.addOption(createTrainingSetOutOfCSVFile);
         options.addOption(fileName);
         options.addOption(preprocessFilesWithGermanStopwords);
+        options.addOption(charset);
+        options.addOption(rtf);
         return options;
     }
 
@@ -108,10 +118,11 @@ public class PreProcessor {
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = parser.parse(options, args);
         int startPage = 0;
-        if(cmd.hasOption("german_stop")) {
+        if (cmd.hasOption("german_stop")) {
             String inputDir = cmd.getOptionValue("inputDir");
             String outputDir = cmd.getOptionValue("outputDir");
-            log.info("Preprocessing files from directory {} with german preprocessor, saving them to {}", inputDir, outputDir);
+            log.info("Preprocessing files from directory {} with german preprocessor, saving them to {}",
+                            inputDir, outputDir);
             PreprocessTextWithGermanPreprocessor.preprocessTextFiles(inputDir, outputDir);
             return;
         }
@@ -125,17 +136,22 @@ public class PreProcessor {
         }
         if (cmd.hasOption("document")) {
             DocumentHandler.writeContentPartOfDocument(cmd.getOptionValue("inputDir"),
-                            cmd.getOptionValue("outputDir"));
+                            cmd.getOptionValue("outputDir"),
+                            cmd.hasOption("charset")
+                                            ? Charset.forName(cmd.getOptionValue("charset"))
+                                            : Charsets.UTF_8);
         }
         if (cmd.hasOption("csv")) {
             extractCSVtoTextFiles(cmd.getOptionValue("inputDir"), cmd.getOptionValue("outputDir"));
             return;
         }
         if (cmd.hasOption("prepare")) {
-
             DocumentHandler.processDocuments(cmd.getOptionValue("inputDir"),
                             cmd.getOptionValue("outputDir"), cmd.hasOption("header"),
-                            cmd.hasOption("zip"));
+                            cmd.hasOption("zip"),
+                            cmd.hasOption("charset")
+                                            ? Charset.forName(cmd.getOptionValue("charset"))
+                                            : Charsets.UTF_8);
             return;
         }
         if (cmd.hasOption("pick")) {
@@ -143,7 +159,10 @@ public class PreProcessor {
             String csvFilename = cmd.hasOption("csvfile") ? cmd.getOptionValue("csvfile")
                             : "picker_file.csv";
             RandomFilePicker.pickAmountOfFiles(amountToPick, cmd.getOptionValue("inputDir"),
-                            cmd.getOptionValue("outputDir"), csvFilename);
+                            cmd.getOptionValue("outputDir"), csvFilename,
+                            cmd.hasOption("charset")
+                                            ? Charset.forName(cmd.getOptionValue("charset"))
+                                            : Charsets.UTF_8);
             return;
         }
         if (cmd.hasOption("e")) {
@@ -152,6 +171,11 @@ public class PreProcessor {
                                 cmd.getOptionValue("outputDir"));
                 return;
             }
+            if(cmd.hasOption("rtf")) {
+                RtfToTextExtractor.convertRtfToPlainText(cmd.getOptionValue("inputDir"),
+                                cmd.getOptionValue("outputDir"));
+            }
+            
             if (cmd.hasOption("start")) {
                 startPage = Integer.parseInt(cmd.getOptionValue("start"));
             }

@@ -34,10 +34,13 @@ use `-csv` in combination with `-inputDir` and `-outputDir.`
 `java -jar ./target/preprocess-0.0.2-SNAPSHOT-jar-with-dependencies.jar -csv -inputDir {input path to csv file} -outputDir {output directory}`
 
 ### Start document preparation (spliting and header removal)
-Splits documents according to `(?m)^Dokument \\w+$";` and removes header with `(?m)^.*?\\b(copyright|Copyright|(c))\\b.*$`.
-use `-prepare` in combination with `-inputDir` and `-outputDir.`
 
-`java -jar ./target/preprocess-0.0.2-SNAPSHOT-jar-with-dependencies.jar -prepare -header -inputDir {input path to folder containing txt files} -outputDir {output directory}`.
+Its mandatory to determine the file encoding first. Faktiva english documents are mostly `ISO-8851-1` encoded. For this purpose the argument `-charset` was implemented. Default charset if nothing else is set is `UTF-8`.
+
+Splits documents according to `(?m)^Dokument \\w+$";` and removes header with `(?m)^.*?\\b(copyright|Copyright|(c))\\b.*$`.
+use `-prepare` `-header` in combination with `-inputDir`, `-outputDir`, `-charset`
+
+`java -jar ./target/preprocess-0.0.2-SNAPSHOT-jar-with-dependencies.jar -prepare -header -inputDir {input path to folder containing txt files} -outputDir {output directory}` `-charset {iso-8851-2}`. 
 
 If inputDirectory holds zip files to extract first, use additional option `-zip` to read zip files directly and pass them to preparation processing.
 
@@ -61,5 +64,5 @@ The category folders are created automatically
 use `-createset` - `-filename {path to csv file}` `-inputDir {dir who holds files}`, `-outputDir {dir where categories and files should be written}`
 
 ### Test Preprocessor on text
-Writes preprocessd text into outputDir to check outcome
+Writes preprocessed text into outputDir to check outcome
 use `german_stop` `-inputDir` `-outputDir`

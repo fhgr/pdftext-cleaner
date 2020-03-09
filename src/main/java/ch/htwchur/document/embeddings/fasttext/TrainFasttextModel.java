@@ -18,22 +18,27 @@ import lombok.extern.slf4j.Slf4j;
 public class TrainFasttextModel {
 
     private static final String FAKTIVA_CONCATINATED =
-                    "/home/sandro/data/projects/03_integrity/Korpus/Faktiva/validated_gDrive/concatinated.txt";
+                    "/home/sandro/data/projects/03_integrity/Word2VecModels/Embeddings/concatinated_files_humarights_integrity_environment.txt";
 
     public static void main(String[] args) throws IOException {
-        log.info("Starting preprocessing and tokenization...");
         String processed = preProcess(FAKTIVA_CONCATINATED);
         log.info("Finished preprocessing and tokenization.");
         Path tmpPath = Files.createTempFile("concat", "tmp");
         FileUtils.writeStringToFile(new File(tmpPath.toString()), processed, Charsets.UTF_8);
         JFastText jft = new JFastText();
         jft.runCmd(new String[] {"skipgram", "-input", tmpPath.toFile().getAbsolutePath(),
-                        "-output", "skipgram-100.model", "-bucket", "1000000", "-minCount", "5",
-                        "-dim", "100", "-wordNgrams", "5", "-epoch", "1", "-thread", "2"});
+                        "-output", "skipgram-300.model", "-bucket", "1000000", "-minCount", "5",
+                        "-dim", "300", "-wordNgrams", "5", "-epoch", "5", "-thread", "4"});
         log.info("Finished model training, removing tempfile...");
         Files.delete(tmpPath);
     }
-
+    
+    /**
+     * preprocess input files
+     * @param filePath
+     * @return
+     * @throws IOException
+     */
     private static String preProcess(String filePath) throws IOException {
         String content = FileUtils.readFileToString(new File(filePath), Charsets.UTF_8);
         List<String> tokens = Arrays.asList(content.toLowerCase()

@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -43,6 +45,11 @@ public class DocumentHandler {
                     "(?m).*Times Newspapers Ltd. All rights reserved.*$";
     private static final String RGX_REMOVE_NYTIMES_HEADER =
                     "(?m).*\\d +.*New York Times Company.*$";
+    private static final String RGX_REMOVE_NEWSLETTER_HEADER = "(?m)^Ausschnitt Seite.*$";
+
+    private static final String RGX_EXTRACT_DATE_DE = "(?m)^\\d+ \\w+ \\d{4}\\s*$";
+    private static final Pattern DATE_PATTERN_DE = Pattern.compile(RGX_EXTRACT_DATE_DE);
+    // Ausschnitt Seite:
 
     private static final String RGX_REMOVE_ARTIKEL_ANZEIGEN = "(?m)^Artikel anzeigen.*$";
     private static final String RGX_REMOVE_ERSTELLT = "(?m)^Erstellt: .*$";
@@ -58,26 +65,26 @@ public class DocumentHandler {
      * @throws IOException
      */
     public static void processDocuments(String inputFolder, String outputFolder,
-                    boolean splitHeader, boolean zipFile) throws IOException {
+                    boolean splitHeader, boolean zipFile, Charset charset) throws IOException {
         int i = 0;
         Map<String, String> textFiles = null;
         if (!zipFile) {
-            textFiles = readWholeFolder(inputFolder);
+            textFiles = readWholeFolder(inputFolder, charset);
         } else {
             textFiles = readFileFromZip(inputFolder);
         }
         for (Map.Entry<String, String> entry : textFiles.entrySet()) {
-            List<String> splittedDocument = splitDocuments(entry.getValue());
+            Map<String,String> splittedDocument = splitDocuments(entry.getValue());
             int docIdx = 0;
-            for (String splittedDoc : splittedDocument) {
+            for (Entry<String,String> splittedDoc : splittedDocument.entrySet()) {
                 if (splitHeader) {
-                    splittedDoc = removeDocumentHeader(splittedDoc);
+                    splittedDoc.setValue(removeDocumentHeader(splittedDoc.getValue()));
                 }
                 i++;
                 if (i % 10 == 0) {
                     log.info("Processed {} files", i);
                 }
-                writeFileToOutputFolder(outputFolder, entry.getKey() + "_" + docIdx, splittedDoc);
+                writeFileToOutputFolder(outputFolder, splittedDoc.getKey() + "_" + docIdx, splittedDoc.getValue());
                 docIdx++;
             }
         }
@@ -151,14 +158,14 @@ public class DocumentHandler {
      * @return map of strings from found files. Key -> filename, Value -> filecontent
      * @throws IOException
      */
-    public static Map<String, String> readWholeFolder(String inputFolder) throws IOException {
+    public static Map<String, String> readWholeFolder(String inputFolder, Charset charset) throws IOException {
         List<Path> filesInFolder = new ArrayList<>();
         Map<String, String> fileMap = new HashMap<>();
         try (Stream<Path> paths = Files.walk(Paths.get(inputFolder))) {
             paths.filter(Files::isRegularFile).forEach(filesInFolder::add);
         }
         for (Path path : filesInFolder) {
-            String textFile = FileUtils.readFileToString(path.toFile(), Charsets.UTF_8);
+            String textFile = FileUtils.readFileToString(path.toFile(), charset);
             fileMap.put(path.getFileName().toString(), textFile);
         }
         return fileMap;
@@ -170,11 +177,29 @@ public class DocumentHandler {
      * @param document
      * @return list of splitted docuuments
      */
-    public static List<String> splitDocuments(String document) {
+    public static Map<String, String> splitDocuments(String document) {
         List<String> splittedDocument = new ArrayList<>();
         String[] splitted = document.split(RGX_SPLIT_DOC);
         splittedDocument.addAll(Arrays.asList(splitted));
-        return splittedDocument;
+        return extractDateOutOfSplittedPart(splittedDocument);
+    }
+    /**
+     * Extracts date from Document part
+     * @param splittedDocuments
+     * @return map with Date as key and document content
+     */
+    private static Map<String, String> extractDateOutOfSplittedPart(
+                    List<String> splittedDocuments) {
+        Map<String, String> splittedDocumentIncludingItsDate = new HashMap<>();
+        int i = 0;
+        for (String doc : splittedDocuments) {
+            Matcher dateMatcher = DATE_PATTERN_DE.matcher(doc);
+            if (dateMatcher.find()) {
+                splittedDocumentIncludingItsDate.put(dateMatcher.group(0) +"_" + i++, doc);
+                log.info("Found date {}", dateMatcher.group(0));
+            }
+        }
+        return splittedDocumentIncludingItsDate;
     }
 
     /**
@@ -201,6 +226,9 @@ public class DocumentHandler {
         if (headerBodySplitted.length == 1) {
             headerBodySplitted = document.split(RGX_REMOVE_NYTIMES_HEADER);
         }
+        if (headerBodySplitted.length == 1) {
+            headerBodySplitted = document.split(RGX_REMOVE_NEWSLETTER_HEADER);
+        }
         if (headerBodySplitted.length == 0) {
             return "";
         }
@@ -214,7 +242,7 @@ public class DocumentHandler {
      * @param document
      * @return
      */
-    private static String removeDocumentNoisyParts(String document) {
+    public static String removeDocumentNoisyParts(String document) {
         return document.replaceAll(RGX_REMOVE_ARTIKEL_ANZEIGEN, "")
                         .replaceAll(RGX_REMOVE_WHO_WROTE_WHEN, "")
                         .replaceAll(RGX_REMOVE_ERSTELLT, "");
@@ -247,9 +275,9 @@ public class DocumentHandler {
      * @param outputFolder
      * @throws IOException
      */
-    public static void writeContentPartOfDocument(String inputFolder, String outputFolder)
+    public static void writeContentPartOfDocument(String inputFolder, String outputFolder, Charset charset)
                     throws IOException {
-        Map<String, String> filesAndNames = readWholeFolder(inputFolder);
+        Map<String, String> filesAndNames = readWholeFolder(inputFolder,charset);
         ObjectMapper mapper = new ObjectMapper();
         log.info("Found {} files in folder {}, starting content extraction...",
                         filesAndNames.size(), inputFolder);

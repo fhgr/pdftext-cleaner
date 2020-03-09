@@ -21,8 +21,13 @@ import lombok.extern.slf4j.Slf4j;
 public class TrainWord2VecModel {
 
     public static void main(String[] args) throws IOException {
-//        String file = "/home/sandro/data/projects/03_integrity/Korpus/Faktiva/validated_gDrive/concatinated.txt";
-        String file = "/home/sandro/data/projects/03_integrity/Korpus_EN/concatinated_english_to_train_embeddings.txt";
+        // TextFileUtils.concatinateTextFiles(
+        // "/home/sandro/data/projects/03_integrity/Korpus_EN/extracted_withdate_2020",
+        // "/home/sandro/data/projects/03_integrity/Word2VecModels/Embeddings/concatinated_files_humarights_integrity_environment.txt",
+        // FileWriteMode.APPEND);//
+
+
+        String file = "/home/sandro/data/projects/03_integrity/Word2VecModels/Embeddings/concatinated_files_humarights_integrity_environment.txt";
         trainEmbeddings(file);
     }
 
@@ -34,8 +39,6 @@ public class TrainWord2VecModel {
      */
     public static void trainEmbeddings(String rawSentenceFile) throws IOException {
         log.info("Loading sentenceFile {} and prepare training...", rawSentenceFile);
-        // String rawSentence = FileUtils.readFileToString(new File(rawSentenceFile),
-        // Charsets.UTF_8);
         SentenceIterator itr = new BasicLineIterator(new File(rawSentenceFile).getAbsolutePath());
         TokenizerFactory t = new DefaultTokenizerFactory();
         t.setTokenPreProcessor(new EnglishPreprocessor());
