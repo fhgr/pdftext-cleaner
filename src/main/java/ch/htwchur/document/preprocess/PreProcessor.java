@@ -23,7 +23,6 @@ import ch.htwchur.document.preprocess.logic.DocumentHandler;
 import ch.htwchur.document.preprocess.logic.DocxToTextExtractor;
 import ch.htwchur.document.preprocess.logic.Pdf2TextExtractor;
 import ch.htwchur.document.preprocess.logic.PdfPostProcessing;
-import ch.htwchur.document.preprocess.logic.PreprocessTextWithGermanPreprocessor;
 import ch.htwchur.document.preprocess.logic.ReadCsvAndMoveFilesToCategories;
 import ch.htwchur.document.preprocess.logic.RtfToTextExtractor;
 import ch.htwchur.document.preprocess.validation.RandomFilePicker;
@@ -79,9 +78,6 @@ public class PreProcessor {
         final Option fileName = Option.builder("filename").required(false).hasArg(true)
                         .longOpt("Filename to operate with").longOpt("Filename to read csv from...")
                         .build();
-        final Option preprocessFilesWithGermanStopwords = Option.builder("german_stop")
-                        .required(false).hasArg(false)
-                        .longOpt("preprocess files with german preprocessor").build();
         final Option charset = Option.builder("charset").required(false).hasArg(true)
                         .longOpt("Charset of input files").build();
         final Option rtf = Option.builder("rtf").required(false).hasArg(false)
@@ -107,7 +103,6 @@ public class PreProcessor {
         options.addOption(documentContent);
         options.addOption(createTrainingSetOutOfCSVFile);
         options.addOption(fileName);
-        options.addOption(preprocessFilesWithGermanStopwords);
         options.addOption(charset);
         options.addOption(rtf);
         options.addOption(includeSubfoldersCmd);
@@ -128,14 +123,6 @@ public class PreProcessor {
         CommandLine cmd = parser.parse(options, args);
         int startPage = 0;
 
-        if (cmd.hasOption("german_stop")) {
-            String i = cmd.getOptionValue("i");
-            String o = cmd.getOptionValue("o");
-            log.info("Preprocessing files from directory {} with german preprocessor, saving them to {}",
-                            i, o);
-            PreprocessTextWithGermanPreprocessor.preprocessTextFiles(i, o);
-            return;
-        }
         if (cmd.hasOption("createset")) {
             String filename = cmd.getOptionValue("filename");
             log.info("Reading csv file {}, creating category folders and moving items into...",
