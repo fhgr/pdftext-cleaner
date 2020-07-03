@@ -7,7 +7,7 @@
 	<version>0.0.2-SNAPSHOT</version>
 	<name>document-preprocessing</name>
 	<properties>
-		<log4j2.version>2.11.1</log4j2.version>
+		<log4j2.version>2.13.3</log4j2.version>
 		<log4j-slf4j-impl.version>2.11.1</log4j-slf4j-impl.version>
 	</properties>
 	<build>
