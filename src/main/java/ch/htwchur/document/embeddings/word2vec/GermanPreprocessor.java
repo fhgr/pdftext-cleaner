@@ -2,6 +2,7 @@ package ch.htwchur.document.embeddings.word2vec;
 
 import org.deeplearning4j.text.tokenization.tokenizer.TokenPreProcess;
 import ch.htwchur.document.embeddings.StopWords;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Preprocessor for german corpus
@@ -9,14 +10,17 @@ import ch.htwchur.document.embeddings.StopWords;
  * @author sandro.hoerler@htwchur.ch
  *
  */
+@Slf4j
 public class GermanPreprocessor implements TokenPreProcess {
 
     @Override
     public String preProcess(String token) {
-        token = token.toLowerCase().replaceAll("[\\p{Punct}\\d\\.:,\"\'\\(\\)\\[\\]|/?!;]+", "")
-                        .replace("«", "").replace("»", "").replace("”", "").replace("„", "")
-                        .replace("“", "").trim();
-        return (!StopWords.GERMAN_STOP_WORDS.contains(token) && token.length() > 2)  ? token : "";
+        token = token.toLowerCase().replace("ß", "ss").replaceAll("[^a-zA-ZäöüÄÖÜ ]+", "").trim();
+//        token = token.toLowerCase().replaceAll("[\\p{Punct}\\d\\.:,\"\'\\(\\)\\[\\]|/?!;]+", "")
+//                        .replace("«", "").replace("»", "").replace("”", "").replace("„", "")
+//                        .replace("“", "").replace("ß", "ss").trim();
+        log.debug(token);
+        return (!StopWords.GERMAN_STOP_WORDS.contains(token) && token.length() > 2)  ? token : null;
     }
 
     /**

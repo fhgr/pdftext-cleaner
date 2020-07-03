@@ -24,7 +24,7 @@ public class DocumentHandlerTest {
                         "DSTANimmer wieder Fälle, da weiss man genau, wie krumme Geschäfte abgelaufen sind. Trotzdem kann man sie nicht zur Anklage bringen, weil für eine Verurteilung – salopp ausgedrückt – zu wenig Fleisch am Knochen ist.»\n"
                                         + "\n" + "Dokument TANZ000020140903ea930001b\n" + "\n"
                                         + "\n" + "\n" + "\n" + "Schweiz\n" + "Korruption");
-        assertEquals(2, docs.size());
+        assertEquals(1, docs.size());
     }
 
     @Test

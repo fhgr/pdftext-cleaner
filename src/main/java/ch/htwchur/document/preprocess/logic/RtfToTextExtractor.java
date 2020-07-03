@@ -7,15 +7,15 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
-import javax.swing.text.rtf.RTFEditorKit;
+import com.rtfparserkit.converter.text.StringTextConverter;
+import com.rtfparserkit.parser.RtfStreamSource;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class RtfToTextExtractor {
 
-    public static void convertRtfToPlainText(String inputFolder, String outputFolder) throws IOException {
+    public static void convertRtfToPlainText(String inputFolder, String outputFolder)
+                    throws IOException {
         List<Path> files = DocumentHandler.readAllFilesFromDirectory(inputFolder);
         Map<String, String> fileNameContentMap = readRtfDocuments(files);
         int i = 0;
@@ -28,23 +28,20 @@ public class RtfToTextExtractor {
         }
         log.info("Finished docx to text conversion...");
     }
-    private static Map<String, String> readRtfDocuments(List<Path> paths) {
+
+    protected static Map<String, String> readRtfDocuments(List<Path> paths) {
         Map<String, String> fileNameContentMap = new HashMap<>();
         for (Path path : paths) {
             if (path.toFile().getName().toLowerCase().endsWith(".rtf")) {
-                RTFEditorKit rtfParser = new RTFEditorKit();
-                Document document = rtfParser.createDefaultDocument();
-                InputStream fis;
                 try {
-                    fis = new FileInputStream(path.toFile());
-                    rtfParser.read(fis, document, 0);
-                    String text = document.getText(0, document.getLength());
-
+                    StringTextConverter converter = new StringTextConverter();
+                    InputStream is = new FileInputStream(path.toString());
+                    converter.convert(new RtfStreamSource(is));
+                    String extractedText = converter.getText();
                     fileNameContentMap.put(path.toFile().getName().toLowerCase().split(".rtf")[0],
-                                    text);
-
-                } catch (IOException | BadLocationException e) {
-                    log.info("Coulnt read file {} due to {}", path.toAbsolutePath(),
+                                    extractedText);
+                } catch (IOException e) {
+                    log.warn("Couldn't convert rtf file {} due to {}", path.toAbsolutePath(),
                                     e.getMessage());
                 }
             }

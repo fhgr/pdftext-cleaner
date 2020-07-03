@@ -50,7 +50,7 @@ public class DocxToTextExtractor {
      * @return Map of filenames and their extracted content. key -> filename, value -> extracted
      *         content
      */
-    private static Map<String, String> readDocXFile(List<Path> paths) {
+    public static Map<String, String> readDocXFile(List<Path> paths) {
         Map<String, String> fileNameContentMap = new HashMap<>();
         for (Path path : paths) {
             if (path.toFile().getName().toLowerCase().endsWith(".docx")) {
@@ -71,4 +71,5 @@ public class DocxToTextExtractor {
         }
         return fileNameContentMap;
     }
+    
 }

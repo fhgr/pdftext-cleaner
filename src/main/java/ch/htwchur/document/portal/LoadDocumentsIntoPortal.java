@@ -15,19 +15,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import ch.htwchur.document.preprocess.PreProcessor;
 import ch.htwchur.document.preprocess.logic.DocumentHandler;
 import ch.htwchur.jobcockpit.core.db.TeamsiteMysqlDB;
@@ -42,13 +35,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LoadDocumentsIntoPortal {
 
-    private static final String REPOSITORY = "integrity.semanticlab.net/api";
-    private static final String USERNAME = "api@integrity.semanticlab.net";
-    private static final String PASSWORD = "wQbBlstbOeIvkEXzXhT44FaU4c";
-    private static final String VERSION = "1.0";
-    private static final String BASE_URL = "https://api.weblyzard.com/";
-    private static final String ENDPOINT_TOKEN = "/token";
+    private static final String BASE_URL = "https://api.weblyzard.com/1.0";
     private static final String ENDPOINT_DOCUMENTS = "/documents/";
+    private static final String REPOSITORY = "integrity.semanticlab.net/api";
+
     private static final String EDA_TITLE = "EDA-Newsletter";
     private static final String FAKTIVA_TITLE = "Faktiva";
     private static final int UPLOAD_THREAD_COUNT = 40;
@@ -58,7 +48,6 @@ public class LoadDocumentsIntoPortal {
     private static final boolean LOAD_FROM_DISK = true;
 
     private static ObjectMapper mapper = new ObjectMapper();
-
 
     public static void main(String[] args) throws IOException, SQLException {
         uploadDocumentToPortal();
@@ -76,10 +65,10 @@ public class LoadDocumentsIntoPortal {
 
     private static boolean uploadDocumentToPortal() throws IOException, SQLException {
         List<PortalDocumentDTO> portalDocuments;
-        if (!LOAD_FROM_DISK) {
-            portalDocuments = loadDataFromDatabase();
-        } else {
+        if (LOAD_FROM_DISK) {
             portalDocuments = loadDataFromDisk(CHARSET);
+        } else {
+            portalDocuments = loadDataFromDatabase();
         }
 
         log.info("Loaded {} documents...", portalDocuments.size());
@@ -88,21 +77,7 @@ public class LoadDocumentsIntoPortal {
                         .collect(Collectors.toList());
         log.info("After applying MIN_DOC_LENGTH_FILTER of {} ->  {} documents are present.",
                         MIN_DOCUMENT_LENGTH, portalDocuments.size());
-        HttpGet request = new HttpGet(BASE_URL + VERSION + ENDPOINT_TOKEN);
-        CredentialsProvider provider = new BasicCredentialsProvider();
-        provider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(USERNAME, PASSWORD));
-        String token = "";
-        try (CloseableHttpClient httpClient =
-                        HttpClientBuilder.create().setDefaultCredentialsProvider(provider).build();
-                        CloseableHttpResponse response = httpClient.execute(request)) {
-            log.info("Getting token: response code {}", response.getStatusLine().getStatusCode());
-
-            HttpEntity entity = response.getEntity();
-            if (entity != null) {
-                token = EntityUtils.toString(entity);
-                log.info("Token: {}", token);
-            }
-        }
+        String token = TokenHandler.getToken();
         multiThreadedUpload(portalDocuments, token);
         return true;
     }
@@ -129,8 +104,7 @@ public class LoadDocumentsIntoPortal {
                         log.info("couldn't map...");
                     }
                     CloseableHttpClient httpclient = HttpClients.createDefault();
-                    HttpPost httpPost = new HttpPost(
-                                    BASE_URL + VERSION + ENDPOINT_DOCUMENTS + REPOSITORY);
+                    HttpPost httpPost = new HttpPost(BASE_URL + ENDPOINT_DOCUMENTS + REPOSITORY);
                     httpPost.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
                     HttpEntity stringEntity = new StringEntity(json, ContentType.APPLICATION_JSON);
                     httpPost.setEntity(stringEntity);
@@ -190,7 +164,6 @@ public class LoadDocumentsIntoPortal {
         return portalDocuments;
     }
 
-    /* GERMAN */
     // private final static String FOLDER_LOCATION =
     // "/home/sandro/data/projects/03_integrity/Korpus/Faktiva/RAW/Korruption/extracted_withdate_2019";
     // private final static String FOLDER_LANGUAGE = "de";

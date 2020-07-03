@@ -3,18 +3,16 @@ package ch.htwchur.document.preprocess.logic;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 import org.apache.pdfbox.text.PDFTextStripper;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -55,26 +53,46 @@ public class Pdf2TextExtractor {
     }
 
     /**
-     * Traverses over directory and gets all files
+     * List all files in directory and subdirectories
      * 
-     * @param pathString directory
-     * @param limit limit of files returned
-     * @return
-     * @throws IOException
+     * @param directoryName     root directory
+     * @param files             list to hold files recursively
+     * @param fileSuffix        file endings to be included <code>txt, pdf, ...</code>
+     * @param inlcudeSubfolders scans also subfolders for files
      */
-    public static List<File> readDirectoryFiles(String pathString, int limit) throws IOException {
-        List<File> filesInDirectory = new ArrayList<>();
-        try (Stream<Path> paths = Files.walk(Paths.get(pathString))) {
-            paths.filter(Files::isRegularFile)
-                            .filter(file -> FilenameUtils.getExtension(file.toString())
-                                            .toLowerCase().contains("pdf"))
-                            .forEach(path -> filesInDirectory.add(path.toFile()));
-        }
-        if (limit > 0) {
-            return filesInDirectory.subList(0, limit);
-        }
-        return filesInDirectory;
+    public static void listAllFilesInDirectoryAndSubdirectories(String directoryName,
+                    @NonNull List<File> files, String fileSuffix, boolean includeSubfolders) {
+        File directory = new File(directoryName);
+        /* list files in current directory */
+        File[] fList = directory.listFiles();
+        if (fList != null)
+            for (File file : fList) {
+                if (file.isFile() && FilenameUtils.getExtension(file.toString())
+                                .contains(fileSuffix)) {
+                    files.add(file);
+                } else if (file.isDirectory() && includeSubfolders) {
+                    listAllFilesInDirectoryAndSubdirectories(file.getAbsolutePath(), files,
+                                    fileSuffix, includeSubfolders);
+                }
+            }
+    }
 
+    /**
+     * Read string from file
+     * 
+     * @param file
+     * @param charset
+     * @return String content
+     */
+    public static String readStringFromFile(File file, Charset charset) {
+        charset = charset == null ? StandardCharsets.UTF_8 : charset;
+        try {
+            return FileUtils.readFileToString(file, charset);
+        } catch (IOException e) {
+            log.warn("File {} could not be loaded due to {}", file.getName(), e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /**

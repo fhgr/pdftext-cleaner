@@ -9,6 +9,8 @@ import org.deeplearning4j.text.sentenceiterator.BasicLineIterator;
 import org.deeplearning4j.text.sentenceiterator.SentenceIterator;
 import org.deeplearning4j.text.tokenization.tokenizerfactory.DefaultTokenizerFactory;
 import org.deeplearning4j.text.tokenization.tokenizerfactory.TokenizerFactory;
+import ch.htwchur.document.embeddings.common.TextFileUtils;
+import com.google.common.io.FileWriteMode;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -21,13 +23,13 @@ import lombok.extern.slf4j.Slf4j;
 public class TrainWord2VecModel {
 
     public static void main(String[] args) throws IOException {
-        // TextFileUtils.concatinateTextFiles(
-        // "/home/sandro/data/projects/03_integrity/Korpus_EN/extracted_withdate_2020",
-        // "/home/sandro/data/projects/03_integrity/Word2VecModels/Embeddings/concatinated_files_humarights_integrity_environment.txt",
-        // FileWriteMode.APPEND);//
+        TextFileUtils.concatinateTextFiles(
+                        "/home/sandro/data/projects/03_integrity/Korpus/extracted_withdate_2020",
+                        "/home/sandro/data/projects/03_integrity/Word2VecModels/Embeddings/concatinated_files_humarights_integrity_environment.txt",
+                        FileWriteMode.APPEND);//
 
 
-        String file = "/home/sandro/data/projects/03_integrity/Word2VecModels/Embeddings/concatinated_files_humarights_integrity_environment.txt";
+        String file = "/home/sandro/data/projects/03_integrity/Word2VecModels/Embeddings/concatinated_files_humarights_integrity_environment_german.txt";
         trainEmbeddings(file);
     }
 
@@ -41,15 +43,16 @@ public class TrainWord2VecModel {
         log.info("Loading sentenceFile {} and prepare training...", rawSentenceFile);
         SentenceIterator itr = new BasicLineIterator(new File(rawSentenceFile).getAbsolutePath());
         TokenizerFactory t = new DefaultTokenizerFactory();
-        t.setTokenPreProcessor(new EnglishPreprocessor());
+        t.setTokenPreProcessor(new GermanPreprocessor());
 
-        Word2Vec vec = new Word2Vec.Builder().minWordFrequency(5).iterations(5).layerSize(300)
-                        .seed(42).windowSize(5).iterate(itr).tokenizerFactory(t).build();
+        Word2Vec vec = new Word2Vec.Builder().minWordFrequency(5).iterations(5).epochs(5)
+                        .layerSize(300).seed(42).windowSize(5).iterate(itr).tokenizerFactory(t)
+                        .build();
 
         vec.fit();
 
         WordVectorSerializer.writeWordVectors(vec,
-                        "english_serialied-" + vec.getLayerSize() + "-vector-5-5.txt");
+                        "german_serialied-" + vec.getLayerSize() + "-vector-5-5.txt");
         Collection<String> lst = vec.wordsNearest("bestechung", 10);
         System.out.println(lst);
     }

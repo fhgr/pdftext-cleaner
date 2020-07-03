@@ -3,8 +3,10 @@ package ch.htwchur.document.preprocess;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -14,6 +16,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import ch.htwchur.document.preprocess.logic.CSVtoTextExtractor;
 import ch.htwchur.document.preprocess.logic.DocumentHandler;
@@ -30,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Pdf Healer, PDF to text extractor, Weblyzard PDF extractor
  * 
- * @author sandro.hoerler@htwchur.ch
+ * @author sandro.hoerler@fhgr.ch
  *
  */
 @Slf4j
@@ -41,10 +44,10 @@ public class PreProcessor {
      * @return options
      */
     private static Options generateOptions() {
-        final Option inputFile = Option.builder("inputDir").required(true).hasArg(true)
+        final Option inputFile = Option.builder("i").required(true).hasArg(true)
                         .longOpt("Input directory with text files or if csv input csv file")
                         .build();
-        final Option outputFile = Option.builder("outputDir").required(true).hasArg(true)
+        final Option outputFile = Option.builder("o").required(true).hasArg(true)
                         .longOpt("Output directory").build();
         final Option extraction = Option.builder("e").required(false).hasArg(false)
                         .longOpt("Extract PDF to text").build();
@@ -83,6 +86,10 @@ public class PreProcessor {
                         .longOpt("Charset of input files").build();
         final Option rtf = Option.builder("rtf").required(false).hasArg(false)
                         .longOpt("Extracts RTF to plain textx").build();
+        final Option includeSubfoldersCmd = Option.builder("subfolder").required(false)
+                        .hasArg(false).longOpt("scans also subfolders for files").build();
+        final Option fileSuffix = Option.builder("suffix").required(false).hasArg(true)
+                        .longOpt("file ending to be scanned for in folders").build();
 
         final Options options = new Options();
         options.addOption(inputFile);
@@ -103,6 +110,8 @@ public class PreProcessor {
         options.addOption(preprocessFilesWithGermanStopwords);
         options.addOption(charset);
         options.addOption(rtf);
+        options.addOption(includeSubfoldersCmd);
+        options.addOption(fileSuffix);
         return options;
     }
 
@@ -118,37 +127,37 @@ public class PreProcessor {
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = parser.parse(options, args);
         int startPage = 0;
+
         if (cmd.hasOption("german_stop")) {
-            String inputDir = cmd.getOptionValue("inputDir");
-            String outputDir = cmd.getOptionValue("outputDir");
+            String i = cmd.getOptionValue("i");
+            String o = cmd.getOptionValue("o");
             log.info("Preprocessing files from directory {} with german preprocessor, saving them to {}",
-                            inputDir, outputDir);
-            PreprocessTextWithGermanPreprocessor.preprocessTextFiles(inputDir, outputDir);
+                            i, o);
+            PreprocessTextWithGermanPreprocessor.preprocessTextFiles(i, o);
             return;
         }
         if (cmd.hasOption("createset")) {
             String filename = cmd.getOptionValue("filename");
             log.info("Reading csv file {}, creating category folders and moving items into...",
                             filename);
-            ReadCsvAndMoveFilesToCategories.copyFilesFromCsv(cmd.getOptionValue("inputDir"),
-                            cmd.getOptionValue("outputDir"), filename);
+            ReadCsvAndMoveFilesToCategories.copyFilesFromCsv(cmd.getOptionValue("i"),
+                            cmd.getOptionValue("o"), filename);
             return;
         }
         if (cmd.hasOption("document")) {
-            DocumentHandler.writeContentPartOfDocument(cmd.getOptionValue("inputDir"),
-                            cmd.getOptionValue("outputDir"),
+            DocumentHandler.writeContentPartOfDocument(cmd.getOptionValue("i"),
+                            cmd.getOptionValue("o"),
                             cmd.hasOption("charset")
                                             ? Charset.forName(cmd.getOptionValue("charset"))
                                             : Charsets.UTF_8);
         }
         if (cmd.hasOption("csv")) {
-            extractCSVtoTextFiles(cmd.getOptionValue("inputDir"), cmd.getOptionValue("outputDir"));
+            extractCSVtoTextFiles(cmd.getOptionValue("i"), cmd.getOptionValue("o"));
             return;
         }
         if (cmd.hasOption("prepare")) {
-            DocumentHandler.processDocuments(cmd.getOptionValue("inputDir"),
-                            cmd.getOptionValue("outputDir"), cmd.hasOption("header"),
-                            cmd.hasOption("zip"),
+            DocumentHandler.processDocuments(cmd.getOptionValue("i"), cmd.getOptionValue("o"),
+                            cmd.hasOption("header"), cmd.hasOption("zip"),
                             cmd.hasOption("charset")
                                             ? Charset.forName(cmd.getOptionValue("charset"))
                                             : Charsets.UTF_8);
@@ -158,8 +167,8 @@ public class PreProcessor {
             int amountToPick = Integer.parseInt(cmd.getOptionValue("pick"));
             String csvFilename = cmd.hasOption("csvfile") ? cmd.getOptionValue("csvfile")
                             : "picker_file.csv";
-            RandomFilePicker.pickAmountOfFiles(amountToPick, cmd.getOptionValue("inputDir"),
-                            cmd.getOptionValue("outputDir"), csvFilename,
+            RandomFilePicker.pickAmountOfFiles(amountToPick, cmd.getOptionValue("i"),
+                            cmd.getOptionValue("o"), csvFilename,
                             cmd.hasOption("charset")
                                             ? Charset.forName(cmd.getOptionValue("charset"))
                                             : Charsets.UTF_8);
@@ -167,34 +176,51 @@ public class PreProcessor {
         }
         if (cmd.hasOption("e")) {
             if (cmd.hasOption("doc")) {
-                DocxToTextExtractor.extractDocxFilesToText(cmd.getOptionValue("inputDir"),
-                                cmd.getOptionValue("outputDir"));
+                DocxToTextExtractor.extractDocxFilesToText(cmd.getOptionValue("i"),
+                                cmd.getOptionValue("o"));
                 return;
             }
-            if(cmd.hasOption("rtf")) {
-                RtfToTextExtractor.convertRtfToPlainText(cmd.getOptionValue("inputDir"),
-                                cmd.getOptionValue("outputDir"));
+            if (cmd.hasOption("rtf")) {
+                RtfToTextExtractor.convertRtfToPlainText(cmd.getOptionValue("i"),
+                                cmd.getOptionValue("o"));
+                return;
             }
-            
+
             if (cmd.hasOption("start")) {
                 startPage = Integer.parseInt(cmd.getOptionValue("start"));
             }
             log.info("Starting pdf to text extraction...");
-            List<File> files = Pdf2TextExtractor.readDirectoryFiles(cmd.getOptionValue("inputDir"),
-                            cmd.getOptionValue("limit") == null ? 0
-                                            : Integer.parseInt(cmd.getOptionValue("limit")));
+            List<File> files = new ArrayList<>();
+            if (cmd.hasOption("limit")) {
+                throw new NotImplementedException("limit is not implemented...");
+            }
+            Pdf2TextExtractor.listAllFilesInDirectoryAndSubdirectories(cmd.getOptionValue("i"),
+                            files, cmd.getOptionValue("suffix"), cmd.hasOption("subfolder"));
+
+            if (!cmd.getOptionValue("suffix").toLowerCase().equals("pdf")) {
+                for (File file : files) {
+                    String healedContent = pdfHealProcessing(Pdf2TextExtractor.readStringFromFile(
+                                    file,
+                                    cmd.getOptionValue("charset") == null ? StandardCharsets.UTF_8
+                                                    : Charset.forName(cmd
+                                                                    .getOptionValue("charset"))));
+                    Pdf2TextExtractor.writeFileToSytem(Paths.get(cmd.getOptionValue("o")),
+                                    healedContent, file.getName());
+
+                }
+                return;
+            }
+
             if (files.size() == 0) {
-                log.info("No files found to process in {}",
-                                Paths.get(cmd.getOptionValue("inputDir")));
+                log.info("No files found to process in {}", Paths.get(cmd.getOptionValue("i")));
             }
             int i = 0;
             for (File file : files) {
                 i++;
                 Pair<String, String> extractedPdf =
                                 Pdf2TextExtractor.extractPdfToText(file, startPage);
-                Pdf2TextExtractor.writeFileToSytem(
-                                new File(cmd.getOptionValue("outputDir")).toPath(),
-                                extractedPdf.getRight(), extractedPdf.getLeft());
+                Pdf2TextExtractor.writeFileToSytem(new File(cmd.getOptionValue("o")).toPath(),
+                                pdfHealProcessing(extractedPdf.getRight()), extractedPdf.getLeft());
                 if (i % 10 == 0) {
                     log.info("Extracted and Wrote file number {}", i);
                 } ;
@@ -202,20 +228,18 @@ public class PreProcessor {
             log.info("Pdf extraction done, extracted {} file(s)", i);
             return;
         }
-        startProcessingOfWholeFolder(cmd.getOptionValue("inputDir"),
-                        cmd.getOptionValue("outputDir"));
+        startProcessingOfWholeFolder(cmd.getOptionValue("i"), cmd.getOptionValue("o"));
     }
 
     /**
      * Processes whole folder
      * 
-     * @param inputDir  reading directory
-     * @param outputDir writing directory
+     * @param i reading directory
+     * @param o writing directory
      * @throws IOException
      */
-    private static void startProcessingOfWholeFolder(String inputDir, String outputDir)
-                    throws IOException {
-        File folder = new File(inputDir + "/");
+    private static void startProcessingOfWholeFolder(String i, String o) throws IOException {
+        File folder = new File(i + "/");
         File[] listOfFiles = folder.getAbsoluteFile().listFiles();
         if (listOfFiles == null || listOfFiles.length == 0) {
             log.info("Folder {} is empty or invalid...", folder.getAbsoluteFile());
@@ -227,7 +251,7 @@ public class PreProcessor {
                 log.info("Healing file: {}", file.getName());
                 String cleanedText =
                                 pdfHealProcessing(new String(Files.readAllBytes(file.toPath())));
-                FileUtils.writeStringToFile(new File(outputDir + "/" + file.getName() + ".txt"),
+                FileUtils.writeStringToFile(new File(o + "/" + file.getName() + ".txt"),
                                 cleanedText, "UTF-8");
                 log.info("Writing healed file: {}", file.getAbsoluteFile().getName());
             }

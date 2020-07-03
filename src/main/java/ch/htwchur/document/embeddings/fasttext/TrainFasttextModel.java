@@ -26,7 +26,7 @@ public class TrainFasttextModel {
         Path tmpPath = Files.createTempFile("concat", "tmp");
         FileUtils.writeStringToFile(new File(tmpPath.toString()), processed, Charsets.UTF_8);
         JFastText jft = new JFastText();
-        jft.runCmd(new String[] {"skipgram", "-input", tmpPath.toFile().getAbsolutePath(),
+        jft.runCmd(new String[] {"skipgram", "-input", tmpPath.toAbsolutePath().toString(),
                         "-output", "skipgram-300.model", "-bucket", "1000000", "-minCount", "5",
                         "-dim", "300", "-wordNgrams", "5", "-epoch", "5", "-thread", "4"});
         log.info("Finished model training, removing tempfile...");
@@ -47,7 +47,7 @@ public class TrainFasttextModel {
                         .replace("“", "").trim().split("\\s+"));
 
         tokens = tokens.stream().map(token -> token.trim())
-                        .filter(token -> !StopWords.GERMAN_STOP_WORDS.contains(token))
+                        .filter(token -> !StopWords.ENGLISH_STOP_WORDS.contains(token))
                         .filter(token -> token.length() > 2).map(token -> token.trim())
                         .collect(Collectors.toList());
         return Strings.join(tokens, ' ');
