@@ -16,7 +16,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import ch.htwchur.document.preprocess.logic.CSVtoTextExtractor;
 import ch.htwchur.document.preprocess.logic.DocumentHandler;
@@ -116,6 +115,7 @@ public class PreProcessor {
      * @param args
      * @throws ParseException
      * @throws IOException
+     * @throws                ch.htwchur.document.preprocess.NotImplementedException
      */
     public static void main(String[] args) throws ParseException, IOException {
         Options options = generateOptions();
