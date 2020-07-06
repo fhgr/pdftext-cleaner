@@ -26,7 +26,7 @@ public class RtfToTextExtractor {
                 log.info("Wrote {} files to {}", i, outputFolder);
             }
         }
-        log.info("Finished docx to text conversion...");
+        log.info("Finished rtf to text conversion...");
     }
 
     protected static Map<String, String> readRtfDocuments(List<Path> paths) {

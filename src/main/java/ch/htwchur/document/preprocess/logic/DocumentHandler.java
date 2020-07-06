@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,6 +26,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
+import com.google.common.hash.Hashing;
 import com.weblyzard.api.model.document.Document;
 import lombok.extern.slf4j.Slf4j;
 
@@ -74,9 +76,8 @@ public class DocumentHandler {
             textFiles = readFileFromZip(inputFolder);
         }
         for (Map.Entry<String, String> entry : textFiles.entrySet()) {
-            Map<String,String> splittedDocument = splitDocuments(entry.getValue());
-            int docIdx = 0;
-            for (Entry<String,String> splittedDoc : splittedDocument.entrySet()) {
+            Map<String, String> splittedDocument = splitDocuments(entry.getValue());
+            for (Entry<String, String> splittedDoc : splittedDocument.entrySet()) {
                 if (splitHeader) {
                     splittedDoc.setValue(removeDocumentHeader(splittedDoc.getValue()));
                 }
@@ -84,8 +85,13 @@ public class DocumentHandler {
                 if (i % 10 == 0) {
                     log.info("Processed {} files", i);
                 }
-                writeFileToOutputFolder(outputFolder, splittedDoc.getKey() + "_" + docIdx, splittedDoc.getValue());
-                docIdx++;
+                String contentHash = Hashing.murmur3_32()
+                                .hashString(splittedDoc.getValue(), StandardCharsets.UTF_8)
+                                .toString();
+                String[] directories = entry.getKey().split("/");
+                String mediaSourceFolder = directories[directories.length - 2];
+                writeFileToOutputFolder(outputFolder + "/" + mediaSourceFolder,
+                                splittedDoc.getKey() + "_" + contentHash, splittedDoc.getValue());
             }
         }
         log.info("Wrote {} files", i);
@@ -158,7 +164,8 @@ public class DocumentHandler {
      * @return map of strings from found files. Key -> filename, Value -> filecontent
      * @throws IOException
      */
-    public static Map<String, String> readWholeFolder(String inputFolder, Charset charset) throws IOException {
+    public static Map<String, String> readWholeFolder(String inputFolder, Charset charset)
+                    throws IOException {
         List<Path> filesInFolder = new ArrayList<>();
         Map<String, String> fileMap = new HashMap<>();
         try (Stream<Path> paths = Files.walk(Paths.get(inputFolder))) {
@@ -166,7 +173,7 @@ public class DocumentHandler {
         }
         for (Path path : filesInFolder) {
             String textFile = FileUtils.readFileToString(path.toFile(), charset);
-            fileMap.put(path.getFileName().toString(), textFile);
+            fileMap.put(path.toAbsolutePath().toString(), textFile);
         }
         return fileMap;
     }
@@ -183,8 +190,10 @@ public class DocumentHandler {
         splittedDocument.addAll(Arrays.asList(splitted));
         return extractDateOutOfSplittedPart(splittedDocument);
     }
+
     /**
      * Extracts date from Document part
+     * 
      * @param splittedDocuments
      * @return map with Date as key and document content
      */
@@ -195,7 +204,7 @@ public class DocumentHandler {
         for (String doc : splittedDocuments) {
             Matcher dateMatcher = DATE_PATTERN_DE.matcher(doc);
             if (dateMatcher.find()) {
-                splittedDocumentIncludingItsDate.put(dateMatcher.group(0) +"_" + i++, doc);
+                splittedDocumentIncludingItsDate.put(dateMatcher.group(0) + "_" + i++, doc);
                 log.info("Found date {}", dateMatcher.group(0));
             }
         }
@@ -275,9 +284,9 @@ public class DocumentHandler {
      * @param outputFolder
      * @throws IOException
      */
-    public static void writeContentPartOfDocument(String inputFolder, String outputFolder, Charset charset)
-                    throws IOException {
-        Map<String, String> filesAndNames = readWholeFolder(inputFolder,charset);
+    public static void writeContentPartOfDocument(String inputFolder, String outputFolder,
+                    Charset charset) throws IOException {
+        Map<String, String> filesAndNames = readWholeFolder(inputFolder, charset);
         ObjectMapper mapper = new ObjectMapper();
         log.info("Found {} files in folder {}, starting content extraction...",
                         filesAndNames.size(), inputFolder);
