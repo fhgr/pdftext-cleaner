@@ -11,6 +11,7 @@ import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -42,68 +43,62 @@ public class PreProcessor {
      * @return options
      */
     private static Options generateOptions() {
+
+        final Option createSet = Option.builder("c").required(true).hasArg(true)
+                        .desc("creates a dataset from a csv template").build();
         final Option inputFile = Option.builder("i").required(true).hasArg(true)
-                        .longOpt("Input directory with text files or if csv input csv file")
-                        .build();
+                        .desc("input directory or input file").build();
         final Option outputFile = Option.builder("o").required(true).hasArg(true)
-                        .longOpt("Output directory").build();
+                        .desc("output directory or output file").build();
         final Option extraction = Option.builder("e").required(false).hasArg(false)
-                        .longOpt("Extract PDF to text").build();
-        final Option limit = Option.builder("limit").required(false).hasArg(false)
-                        .longOpt("Limit of pdf files to extract").build();
-        final Option start = Option.builder("start").required(false).hasArg(true)
-                        .longOpt("Start extraction at page number").build();
+                        .desc("extracts pdfs to plain text including healing steps").build();
+        final Option start = Option.builder("s").required(false).hasArg(true)
+                        .desc("start pdf extraction at pdf page number").build();
         final Option csv = Option.builder("csv").required(false).hasArg(false)
-                        .longOpt("Extracts csv file to text files").build();
-        final Option prepareDocs = Option.builder("prepare").required(false).hasArg(false)
-                        .longOpt("prepares faktiva documents").build();
-        final Option removeHeader = Option.builder("header").required(false).hasArg(false)
-                        .longOpt("Removes header of a splitted document").build();
-        final Option pickAmount = Option.builder("pick").required(false).hasArg(true).longOpt(
-                        "Picks documents from directory with specified amount. A csv with all picked filenames is created")
+                        .desc("extracts text from weblyzard-portal csv download").build();
+        final Option prepareDocs = Option.builder("p").required(false).hasArg(false)
+                        .desc("preprocess faktiva data").build();
+        final Option removeHeader = Option.builder("h").required(false).hasArg(false)
+                        .desc("adds header removal step to preprocessing").build();
+        final Option pickAmount = Option.builder("pick").required(false).hasArg(true).desc(
+                        "picks documents from directory with specified amount. A csv with all picked filenames is created")
                         .build();
         final Option csvFileName = Option.builder("csvfile").required(false).hasArg(true)
-                        .longOpt("defines csv filename in combination with pick argument").build();
+                        .desc("defines csv filename in combination with pick argument").build();
         final Option extractDoc = Option.builder("doc").required(false).hasArg(false)
-                        .longOpt("extracts docx file to text").build();
-        final Option zipFile = Option.builder("zip").required(false).hasArg(false)
-                        .longOpt("choose zip files from input dir").build();
-        final Option documentContent = Option.builder("document").required(false).hasArg(false)
-                        .longOpt("extract content part of a json wl-document").build();
-        final Option createTrainingSetOutOfCSVFile = Option.builder("createset").required(false)
-                        .hasArg(false)
-                        .longOpt("Read csv file and moves files to predefined location depending on teir category -> filename row must be named \"name\", category row must be named as \"category\"")
-                        .build();
-        final Option fileName = Option.builder("filename").required(false).hasArg(true)
-                        .longOpt("Filename to operate with").longOpt("Filename to read csv from...")
-                        .build();
-        final Option charset = Option.builder("charset").required(false).hasArg(true)
-                        .longOpt("Charset of input files").build();
+                        .desc("extracts doc* files to plain text").build();
         final Option rtf = Option.builder("rtf").required(false).hasArg(false)
-                        .longOpt("Extracts RTF to plain textx").build();
+                        .desc("extracts rtf files to plain text").build();
+        final Option zipFile = Option.builder("zip").required(false).hasArg(false)
+                        .desc("choose zip file from input directory").build();
+        final Option documentContent = Option.builder("document").required(false).hasArg(false)
+                        .desc("extracts content part of a json wl-document").build();
+        final Option fileName = Option.builder("filename").required(false).hasArg(true)
+                        .desc("filename to read csv from").build();
+        final Option charset = Option.builder("charset").required(false).hasArg(true)
+                        .desc("set charset of input files").build();
         final Option includeSubfoldersCmd = Option.builder("subfolder").required(false)
-                        .hasArg(false).longOpt("scans also subfolders for files").build();
+                        .hasArg(false).desc("scans also subfolders for files").build();
         final Option fileSuffix = Option.builder("suffix").required(false).hasArg(true)
-                        .longOpt("file ending to be scanned for in folders").build();
+                        .desc("file ending to be scanned for in folders").build();
 
         final Options options = new Options();
+        options.addOption(createSet);
         options.addOption(inputFile);
         options.addOption(outputFile);
         options.addOption(extraction);
-        options.addOption(limit);
         options.addOption(start);
         options.addOption(csv);
+        options.addOption(fileName);
         options.addOption(prepareDocs);
         options.addOption(removeHeader);
         options.addOption(csvFileName);
         options.addOption(pickAmount);
         options.addOption(extractDoc);
+        options.addOption(rtf);
         options.addOption(zipFile);
         options.addOption(documentContent);
-        options.addOption(createTrainingSetOutOfCSVFile);
-        options.addOption(fileName);
         options.addOption(charset);
-        options.addOption(rtf);
         options.addOption(includeSubfoldersCmd);
         options.addOption(fileSuffix);
         return options;
@@ -120,10 +115,18 @@ public class PreProcessor {
     public static void main(String[] args) throws ParseException, IOException {
         Options options = generateOptions();
         CommandLineParser parser = new DefaultParser();
-        CommandLine cmd = parser.parse(options, args);
+        HelpFormatter formatter = new HelpFormatter();
+        CommandLine cmd = null;
+        try {
+            cmd = parser.parse(options, args);
+        } catch (ParseException e) {
+            System.out.println(e.getMessage());
+            formatter.printHelp("preprocessor", options);
+            System.exit(1);
+        }
         int startPage = 0;
-
-        if (cmd.hasOption("createset")) {
+        /* creates a dataset from a csv template */
+        if (cmd.hasOption("c")) {
             String filename = cmd.getOptionValue("filename");
             log.info("Reading csv file {}, creating category folders and moving items into...",
                             filename);
@@ -142,9 +145,9 @@ public class PreProcessor {
             extractCSVtoTextFiles(cmd.getOptionValue("i"), cmd.getOptionValue("o"));
             return;
         }
-        if (cmd.hasOption("prepare")) {
+        if (cmd.hasOption("p")) {
             DocumentHandler.processDocuments(cmd.getOptionValue("i"), cmd.getOptionValue("o"),
-                            cmd.hasOption("header"), cmd.hasOption("zip"),
+                            cmd.hasOption("h"), cmd.hasOption("zip"),
                             cmd.hasOption("charset")
                                             ? Charset.forName(cmd.getOptionValue("charset"))
                                             : Charsets.UTF_8);
@@ -178,9 +181,6 @@ public class PreProcessor {
             }
             log.info("Starting pdf to text extraction...");
             List<File> files = new ArrayList<>();
-            if (cmd.hasOption("limit")) {
-                throw new NotImplementedException("limit is not implemented...");
-            }
             Pdf2TextExtractor.listAllFilesInDirectoryAndSubdirectories(cmd.getOptionValue("i"),
                             files, cmd.getOptionValue("suffix"), cmd.hasOption("subfolder"));
 

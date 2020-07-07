@@ -16,8 +16,8 @@ import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * CSV file must have following structure 1st row names of colums 1st column with filename, without
- * column names!
+ * CSV file must have following structure:
+ * 1st row names of colums 1st column with filename, withoutcolumn names!
  * 
  * Files will be moved into the depending category folders. They will be created if not existing
  * yet. InputDir describes directory where all the files lie OutputDir describes directory where

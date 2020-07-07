@@ -1,4 +1,48 @@
-## PDF to Text Cleaner
+## Document preprocessing
+This project hold various preprocessing steps to prepare raw documents like faktiva articles to be used as training data or weblyzard-portal data.
+
+### Build and start cleaning process
+Build jar by `mvn clean package`
+Run processing by `java -jar ./target/preprocess-0.0.2-SNAPSHOT-jar-with-dependencies.jar {options}`
+
+### Help
+```
+usage: preprocessor
+ -charset <arg>    set charset of input files
+ -csv              extracts text from weblyzard-portal csv download
+ -csvfile <arg>    defines csv filename in combination with pick argument
+ -doc              extracts doc* files to plain text
+ -document         extracts content part of a json wl-document
+ -e                extracts pdfs to plain text including healing steps
+ -filename <arg>   filename to read csv from
+ -h                adds header removal step to preprocessing
+ -i <arg>          input directory or input file
+ -o <arg>          output directory or output file
+ -p <arg>          picks documents from directory with specified amount. A
+                   csv with all picked filenames is created
+ -rtf              extracts rtf files to plain text
+ -s <arg>          start pdf extraction at pdf page number
+ -subfolder        scans also subfolders for files
+ -suffix <arg>     file ending to be scanned for in folders
+ -zip              choose zip file from input directory
+```
+
+### Usage examples
+
+`-createset -filename {}` creates a dataset from a csv template".
+
+`-document -i {} -o {} -charset` extracts content part of a json wl-document (default charset UTF-8).
+
+`-csv -i {} -o {}` extracts text from weblyzard-portal csv download
+
+`-p -i {} -o {} -h -charset {}` preprocesses text files in folder + subfolders, splitts documents into parts and remove all headers.
+
+`-pick {} -csvfile {} -i {} -o {} -charset {}` picks documents from directory with specified amount. A csv with all picked filenames is created (default charset UTF-8).
+
+`-e -i {} -o {}[-doc | -rtf] -start {} -suffix {} -charset {}` extracts pdfs to plain text including healing steps.
+
+
+### pdf cleaning steps
 Pdf to text cleaner addresses common problems after a pdf is extracted to text
 * Merges splitted words due to newlines. like Handels-\nabkommen'
 * Merges newlines if no puncation at the end of the line
@@ -7,62 +51,3 @@ Pdf to text cleaner addresses common problems after a pdf is extracted to text
 * Removes pages keywords like 'Seite x von y' or 'Page x of y'
 * Reduces reoccuring newlines to a maxiumum of 2
 * Merges white-spaces words like 'W e d n e s d a y' to 'Wednesday'
-
-## Weblyzard Portal CSV to Text file extractor
-* Reads Weblyzard Portal export csv and extracts rows to text-file (only text column)
-* Creates murmur3-128bit hash from text for filename to keep them distinct
-
-Note -inputDir is in this case a csv file
-
-### Build and start cleaning process
-Build jar by `mvn clean package`
-Run processing by `java -jar ./target/preprocess-0.0.2-SNAPSHOT-jar-with-dependencies.jar -inputDir {input directory with .txt files} -outputDir {output diretory}`
-
-Note: options -inputDir and -outputDir are mandatory
-
-### Start extraction process
-`java -jar ./target/preprocess-0.0.2-SNAPSHOT-jar-with-dependencies.jar -e -start 3 -inputDir {input directory with .pdf files} -outputDir {output directory}`
-
-Note:   
-* options `-inputDir` and `-outputDir` are mandatory
-* option `-e` -> extraction from pdf to text
-* with option `-e` set you can also define `-start {int}` which describes the pdf page to start extraction at
-
-### Start Weblyzard CSV exporter
-Exports Weblyzard Portal CSV format to textfile per row
-use `-csv` in combination with `-inputDir` and `-outputDir.`
-`java -jar ./target/preprocess-0.0.2-SNAPSHOT-jar-with-dependencies.jar -csv -inputDir {input path to csv file} -outputDir {output directory}`
-
-### Start document preparation (spliting and header removal)
-
-Its mandatory to determine the file encoding first. Faktiva english documents are mostly `ISO-8851-1` encoded. For this purpose the argument `-charset` was implemented. Default charset if nothing else is set is `UTF-8`.
-
-Splits documents according to `(?m)^Dokument \\w+$";` and removes header with `(?m)^.*?\\b(copyright|Copyright|(c))\\b.*$`.
-use `-prepare` `-header` in combination with `-inputDir`, `-outputDir`, `-charset`
-
-`java -jar ./target/preprocess-0.0.2-SNAPSHOT-jar-with-dependencies.jar -prepare -header -inputDir {input path to folder containing txt files} -outputDir {output directory}` `-charset {iso-8851-2}`. 
-
-If inputDirectory holds zip files to extract first, use additional option `-zip` to read zip files directly and pass them to preparation processing.
-
-`java -jar ./target/preprocess-0.0.2-SNAPSHOT-jar-with-dependencies.jar -prepare -zip -header -inputDir {input path to folder containing txt files} -outputDir {output directory}`.
-
-### Pick specified amount of files in randomized manner, create a csv file with the randomized filenames and write files and csv file to outputFolder
-use `-pick {amount}` `-csvfile {only filename}` `-inputDir` `-outputDir`
-
-### Extracts files with .docx ending to plain text
-use `-e` `-doc` `-inputDir` `-ouputDir`
-
-### Extract content part to simple text of a persisted WL-Document json
-use `-document` `-inputDir` `-ouputDir`
-
-### Use CSV to copy files into categories folders
-The CSV file must have the structure: 
-* column1: filenames w/o path
-* column2: category
-
-The category folders are created automatically
-use `-createset` - `-filename {path to csv file}` `-inputDir {dir who holds files}`, `-outputDir {dir where categories and files should be written}`
-
-### Test Preprocessor on text
-Writes preprocessed text into outputDir to check outcome
-use `german_stop` `-inputDir` `-outputDir`
